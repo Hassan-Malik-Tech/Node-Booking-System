@@ -13,6 +13,6 @@ class BadRequestError extends Error {
 //     throw new BadRequestError('there are no queries for this route')
 //   }
 // with this I can seperate client errors from server errors in the error middleware
-// this can be sent directly in the route, but for maintainability and scalability and consistency, I will centralize it in through the error middleware
+// this can be sent directly in the route, but for maintainability and scalability and consistency, I will centralize it through the error middleware
 
 export default BadRequestError
