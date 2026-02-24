@@ -1,3 +1,5 @@
+import 'dotenv/config';
 import app from './app.js';
+import config from './config/index.js';
 
-app.listen(3000, () => console.log('http://localhost:3000'));
+app.listen(config.port, () => console.log(`http://localhost:${config.port}`));
