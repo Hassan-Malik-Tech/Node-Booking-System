@@ -1,8 +1,11 @@
 -- FOR DEVELOPMENT
 -- Rebuilds the development database 
--- run in psql in the backend folder not the db folder
 
-
+-- Stop the psql script on the first error.
+-- Because the rebuild runs inside one transaction, COMMIT is only reached if every
+--  file succeeds. If an error stops the script before COMMIT,
+-- PostgreSQL discards the uncommitted transaction when the session ends.
+-- It is hard to apply normal ROLLBACK here.
 \set ON_ERROR_STOP on 
 
 BEGIN;

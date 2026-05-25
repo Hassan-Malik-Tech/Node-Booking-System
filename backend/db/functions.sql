@@ -61,25 +61,26 @@ LANGUAGE plpgsql
 AS $$
 BEGIN
   IF OLD.cancelled_at IS NOT NULL
-    THEN RAISE EXCEPTION 'Reservation cancellation is irreversible, make a new reservation instead.';
+    THEN RAISE EXCEPTION 'Reservation cancellation is irreversible..';
   END IF;
   
   RETURN NEW;
 END;
-$$;
+$$; -- make one for completed_at for both staff and automation
 -- custom version for resevations status 'completed'
 CREATE OR REPLACE FUNCTION irreversible_reservation_completion()
 RETURNS trigger
 LANGUAGE plpgsql
 AS $$
 BEGIN
-  IF OLD.status = 'completed'
-    THEN RAISE EXCEPTION 'Reservation completion is irreversible, make a new reservation instead.';
+  IF OLD.status = 'completed' AND NEW.status <> 'completed'
+    THEN RAISE EXCEPTION 'Reservation completion is irreversible.';
   END IF;
   
   RETURN NEW;
 END;
 $$;
+
 
 ----------------------------------------------------------------
 -- Block child writes against soft-deleted parents functions

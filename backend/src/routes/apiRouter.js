@@ -1,11 +1,10 @@
 import { Router } from 'express';
-
-import userRouter from './userRoutes.js';
-import resourceRouter from './resourceRoutes.js';
+import authRouter from './authRoutes.js';
+import meRouter from './meRoutes.js';
 
 const apiRouter = Router();
 
-apiRouter.use('/users', userRouter);
-apiRouter.use('/resources', resourceRouter);
+apiRouter.use('/auth', authRouter);
+apiRouter.use('/me', meRouter);
 
 export default apiRouter;

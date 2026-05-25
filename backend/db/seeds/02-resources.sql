@@ -1,7 +1,7 @@
 INSERT INTO resources (owner_id, name, description, capacity, is_active, deleted_at)
 VALUES
   ( 
-    (SELECT id FROM users WHERE (username = 'active-owner1') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL) ),
     'Meeting Room 1',
     'Medium sized dedicated office room for meetings',
     12,
@@ -10,7 +10,7 @@ VALUES
   ), -- R1 - active, main resource for reservations, owner is U2 (re-uses name from deleted resource, R7)
 
   (
-    (SELECT id FROM users WHERE (username = 'active-owner2') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'active_owner2') AND (deleted_at IS NULL) ),
     'Meeting Room 1',
     'Small dedicated office room for meetings',
     8,
@@ -19,7 +19,7 @@ VALUES
   ), -- R2 - active, multiple same day windows + secondary resource for reservations, owner is U3 (same name as R1, different user)
 
   (
-    (SELECT id FROM users WHERE (username = 'active-owner1') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL) ),
     'Soccer Field',
     'average size soccer field',
     26,
@@ -28,7 +28,7 @@ VALUES
   ), -- R3 - active, has windows but no resevations, owner is U2
 
   (
-    (SELECT id FROM users WHERE (username = 'active-owner1') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL) ),
     'Basket Ball Court',
     'An average sized basket ball court',
     12,
@@ -37,7 +37,7 @@ VALUES
   ), -- R4 - active, only one window, owner is U2
 
   (
-    (SELECT id FROM users WHERE (username = 'active-owner2') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'active_owner2') AND (deleted_at IS NULL) ),
     'Tennis Court',
     'Average size tennis court',
     9,
@@ -46,7 +46,7 @@ VALUES
   ), -- R5 - active, only has expired windows, owner is U3
 
   (
-    (SELECT id FROM users WHERE (username = 'active-owner1') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL) ),
     'Gym',
     'large room to workout',
      30,
@@ -55,7 +55,7 @@ VALUES
   ), -- R6 - inactive, not deleted, owner is U2 
 
   (
-    (SELECT id FROM users WHERE (username = 'active-owner1') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL) ),
     'Meeting Room 1',
     'Medium sized dedicated office room for meetings',
     12,

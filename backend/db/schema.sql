@@ -1,6 +1,7 @@
 CREATE TABLE users (
   id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   username TEXT NOT NULL, -- in the backend do username = username.trim()
+  password_hash TEXT NOT NULL,
   name TEXT,
   email TEXT NOT NULL, 
   -- enforce valid email in the backend (tricky as there are unusual valid emails like user@[192.168.1.10])
@@ -10,7 +11,7 @@ CREATE TABLE users (
   deleted_at TIMESTAMPTZ, -- make it so that a soft deleted user cannot be un-deleted (backend logic in step 5)
   -- TIMESTAMPTZ NOT NULL DEFAULT NOW() does not automatically make it UTC, you have to make it TC by stting it in the current session, the database, and the role/user.
   -- PostgreSQL stores it internally in a UTC-based form, The part that changes is mostly display/output, which follows the session timezone. 
-  CONSTRAINT user_role_check CHECK (role IN ('user', 'admin')), -- use ENUM
+  CONSTRAINT user_role_check CHECK (role IN ('user', 'employee', 'admin')),
   -- add employee role in step 8 (they can only complete a reservation)
   -- admin can fill the manager role
   -- these 3 are simple but enough for a junior project
@@ -20,14 +21,20 @@ CREATE TABLE users (
   -- can also add a location table in a more advanced version of this booking system after completion in a seperate repo
 
 
-  CONSTRAINT users_valid_username
-    CHECK (length(trim(username)) > 0), 
+  CONSTRAINT users_valid_username_length
+    CHECK (length(trim(username)) BETWEEN 3 AND 30), 
 
   CONSTRAINT users_username_must_be_trimmed
     CHECK (username = trim(username)),
 
-  CONSTRAINT users_username_no_space_check
-    CHECK (username NOT LIKE '% %'),
+  CONSTRAINT users_username_correctness_check 
+    CHECK (username ~ '^[a-zA-Z0-9_]+$'),
+
+  CONSTRAINT users_valid_password_hash
+    CHECK (length(trim(password_hash)) > 0),
+
+  CONSTRAINT users_password_hash_must_be_trimmed
+    CHECK (password_hash = trim(password_hash)),
 
   -- db reject empty string emails and emails with white space(extra gaurd) while backend enorced email correctness (as well as trim())
   CONSTRAINT users_valid_email
@@ -38,16 +45,10 @@ CREATE TABLE users (
 
   -- the name constraints only apply if the user chooses to have a name
   CONSTRAINT users_name_must_be_trimmed 
-    CHECK (
-         (name IS NULL)
-      OR (name IS NOT NULL AND name = trim(name))
-    ),
+    CHECK ((name IS NULL) OR (name = trim(name))),
 
   CONSTRAINT users_valid_name
-    CHECK (
-          (name IS NULL)
-      OR (name IS NOT NULL AND length(trim(name)) > 0)
-    )
+    CHECK ((name IS NULL) OR (length(trim(name)) > 0))
 );
 
 CREATE UNIQUE INDEX unique_email_for_non_deleted_user_idx 
@@ -81,6 +82,18 @@ CREATE TABLE resources (
     CHECK (name = trim(name)), -- prevents something like " name "
     -- can trim name in backend before validation/storage (so this contraint is just extra gaurd)
 
+  CONSTRAINT resources_name_allowed_chars_check
+    CHECK (name ~ '^[a-zA-Z0-9 #''()-]+$'),
+    -- - must be at the end to prevent range
+    -- '' allows ' and in postgres you cannot do "[]"
+    -- with only one ' it would end the string, so it would not work
+    -- '' is for string literals (regex needs a string)
+    -- "" is for identifiers like column name or tablle like SELECT "createdAt" FROM users;
+  CONSTRAINT resources_name_has_alphanumeric_check
+    CHECK (name ~ '[a-zA-Z0-9]'),
+    -- prevents resource names with just #, ', and/or -
+    -- there must be at least one alphanumeric character
+  
   CONSTRAINT resources_no_multi_space_name_check
     CHECK (name NOT LIKE '%  %'),
     -- this is here to prevent someone from inserting:
@@ -88,6 +101,12 @@ CREATE TABLE resources (
     -- this prevents both: "meeting room" and "meeting   room" from existing
     -- for junior scope I will just stop here and not go beyond this with more white space rules and with slug rules (-)
     -- so 'meeting room' and 'meeting-room' can exist.
+
+  CONSTRAINT resources_valid_description_check
+    CHECK ((description IS NULL) OR (length(trim(description)) > 0)),
+
+  CONSTRAINT resources_description_must_be_trimmed_check
+    CHECK ((description IS NULL) OR (description = trim(description))),
 
   CONSTRAINT resources_owner_id_fkey
     FOREIGN KEY (owner_id)
@@ -175,15 +194,6 @@ CREATE TABLE availability_windows (
   -- Postgres requires that a composite foreign key reference that exact composite(PK or UNIQUE) in the referenced table
 );
 
-CREATE UNIQUE INDEX unique_non_soft_deleted_resource_availability_window
-  ON availability_windows (resource_id, start_time, end_time)
-  WHERE deleted_at IS NULL;
-    -- solves duplicate time slots per resource_id but not time slot overlap (this is an s tier feature that starts at step 5)
-    -- later solve overlap and adjacency since adjacency is not allowed in my design for availability windows
-    -- do this with exclusion constraint for one resource, one resource cannot have overlapping or adjacent windows
-    -- ofc no overlap/adjacency is only for non deleted windows
--- soft deleted an availability window should cancell all reservations for that resource that fall in that window.
-
 -- ON DELETE RESTRICT is here as a gaurd against hard deleting a resource (resources are only to be soft deleted)
 -- As long as the resource_id points to the resource, hard deleting the resource is impossible in the database level (even without backend logic).
 -- this does not prevent someone from seeding a resource that is already deleted. This can be enforced in the backend but I dont know how to do so in the database (to prevent someone from seeding it directly in the database).
@@ -206,8 +216,8 @@ CREATE TABLE availability_window_allowed_durations (
   CONSTRAINT awad_positive_check
     CHECK (duration_minutes > 0),
 
-  CONSTRAINT awad_30_min_interval_check
-    CHECK (duration_minutes % 30 = 0), -- enforce with joi as well
+  CONSTRAINT awad_15_min_interval_check
+    CHECK (duration_minutes % 15 = 0), -- enforce with joi as well
 
   CONSTRAINT unique_window_duration_per_window
     UNIQUE(availability_window_id, duration_minutes)
@@ -228,10 +238,13 @@ CREATE TABLE reservations (
   resource_id INTEGER NOT NULL,
   availability_window_id INTEGER NOT NULL,
   user_id INTEGER NOT NULL, -- meaning the user who is making the reservation
+  staff_completed_by_user_id INTEGER,
   start_time TIMESTAMPTZ NOT NULL,
   end_time TIMESTAMPTZ NOT NULL,
   status TEXT NOT NULL DEFAULT 'active',
   cancelled_at TIMESTAMPTZ, 
+  system_completed_at TIMESTAMPTZ, -- for auto complete by extention
+  staff_completed_at TIMESTAMPTZ, -- for employee/admin complete
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- add logic to make it so that once a reservation is cancelled, it cannot be un-cancelled (backend)
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   party_size INTEGER NOT NULL,
@@ -254,7 +267,7 @@ CREATE TABLE reservations (
     CHECK (end_time > start_time), 
 
   CONSTRAINT reservation_status_check
-    CHECK (status IN ('active', 'cancelled', 'completed')), -- could make it ENUM type instead
+    CHECK (status IN ('active', 'cancelled', 'completed')), 
     -- remove white space in the backend even a gaurd in here in the db
     -- for list end times for active reservations
     -- filter out cancelled reservations, completed reservations
@@ -267,21 +280,44 @@ CREATE TABLE reservations (
     -- with this you still need to query status = 'active' AND end_time > NOW()
     -- fast implementation first(setInterval), then after my backend is more developed and tested, Graphile Worker
     
-    -- for creation client should not have access to status, it defaults to active (but it is returned)
+    -- for creation client(user) should not have access to status, it defaults to active (but it is returned)
     -- on update, they can cancell or complete
 
-  CONSTRAINT valid_status_cancelled_at_check
+  CONSTRAINT valid_status_timestamp_check
     CHECK (
-         (status = 'cancelled' AND cancelled_at IS NOT NULL)
-      OR (status = 'active' AND cancelled_at IS NULL)
-      OR (status = 'completed' AND cancelled_at IS NULL)
+        (
+            status = 'active'
+          AND cancelled_at IS NULL
+          AND system_completed_at IS NULL
+          AND staff_completed_at IS NULL
+          AND staff_completed_by_user_id IS NULL
+        )
+      OR (
+            status = 'cancelled'
+          AND cancelled_at IS NOT NULL
+          AND system_completed_at IS NULL
+          AND staff_completed_at IS NULL
+          AND staff_completed_by_user_id IS NULL
+        )
+      OR (
+            status = 'completed'
+          AND cancelled_at IS NULL
+          AND (
+            system_completed_at IS NOT NULL
+            OR staff_completed_at IS NOT NULL
+          )
+          AND (
+            (staff_completed_at IS NULL AND staff_completed_by_user_id IS NULL)
+            OR (staff_completed_at IS NOT NULL AND staff_completed_by_user_id IS NOT NULL)
+          )
+        )
     ),
 
-  CONSTRAINT reservations_half_hour_boundary_check
+  CONSTRAINT reservations_quarter_hour_boundary_check
     CHECK (
-      EXTRACT(MINUTE FROM (start_time AT TIME ZONE 'UTC')) IN (0, 30)
+      EXTRACT(MINUTE FROM (start_time AT TIME ZONE 'UTC')) IN (0, 15, 30, 45)
       AND EXTRACT(SECOND FROM (start_time AT TIME ZONE 'UTC')) = 0
-      AND EXTRACT(MINUTE FROM (end_time AT TIME ZONE 'UTC')) IN (0, 30)
+      AND EXTRACT(MINUTE FROM (end_time AT TIME ZONE 'UTC')) IN (0, 15, 30, 45)
       AND EXTRACT(SECOND FROM (end_time AT TIME ZONE 'UTC')) = 0
     ), 
   
@@ -293,6 +329,12 @@ CREATE TABLE reservations (
   CONSTRAINT reservations_resource_id_fkey
     FOREIGN KEY (resource_id)
     REFERENCES resources(id)
+    ON DELETE RESTRICT,
+
+  
+  CONSTRAINT reservations_staff_completed_by_user_id_fkey
+    FOREIGN KEY (staff_completed_by_user_id)
+    REFERENCES users(id)
     ON DELETE RESTRICT,
 
   CONSTRAINT reservations_window_resource_fkey
@@ -448,4 +490,10 @@ WHERE status = 'active'; -- because I filter out expired reservations
 
 -- When a resource is soft-deleted or made inactive, soft-delete that resource’s availability windows whose end_time > NOW(). Keep windows whose end_time <= NOW() for historical record.
 -- so do not soft delete historical windows
+
+-- Normal users can cancel their own reservations only before the cancellation deadline.
+-- Employees/admins can cancel reservations operationally after the deadline.
+-- However, if an employee/admin is cancelling their own reservation, they are treated
+-- as the reservation owner, not as staff, so the normal cancellation deadline still applies.
+-- add this to the ReservationPolicy class
 

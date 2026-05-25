@@ -1,55 +1,56 @@
 import * as userServices from '../services/userService.js';
 import * as userSchemas from '../validators/userSchemas.js';
 import { success } from '../utils/response.js';
-import validateWithJoi from '../utils/validateWithJoi.js';
+import validateRequestInput from '../utils/validateRequestInput.js';
 
 export async function listActiveUsersController(req, res) {
-  const queryParams = validateWithJoi({
+  const queryParams = validateRequestInput({
     errorMessage: 'Invalid query parameters',
     schema: userSchemas.listActiveUsersQuerySchema,
     values: req.query,
   });
 
-  const result = await userServices.listActiveUsersService(queryParams);
+  const { data, pagination } =
+    await userServices.listActiveUsersService(queryParams);
 
-  return res.status(200).json(success(result.data, result.pagination));
+  return res.status(200).json(success({ data, pagination }));
 } // for GET '/api/users'
 
 export async function getActiveUserByIdController(req, res) {
-  const params = validateWithJoi({
+  const params = validateRequestInput({
     errorMessage: 'Invalid userId parameter',
     schema: userSchemas.getActiveUserByIdParamsSchema,
     values: req.params,
   });
 
-  const result = await userServices.getActiveUserByIdService(params.userId);
+  const { data } = await userServices.getActiveUserByIdService(params.userId);
 
-  return res.status(200).json(success(result.data));
+  return res.status(200).json(success({ data }));
 } // for GET '/api/users/:userId'
 
 export async function createUserController(req, res) {
-  const userData = validateWithJoi({
+  const userData = validateRequestInput({
     errorMessage: 'Invalid request body',
     schema: userSchemas.createUserBodySchema,
     values: req.body,
   });
 
-  const result = await userServices.createUserService(userData);
+  const { data } = await userServices.createUserService(userData);
 
   return res
     .status(201)
-    .location(`/api/users/${result.data.id}`)
-    .json(success(result.data));
+    .location(`/api/users/${data.id}`)
+    .json(success({ data }));
 }
 
 export async function updateUserController(req, res) {
-  const params = validateWithJoi({
+  const params = validateRequestInput({
     errorMessage: 'Invalid user id',
     schema: userSchemas.getActiveUserByIdParamsSchema,
     values: req.params,
   });
 
-  const patchFields = validateWithJoi({
+  const patchFields = validateRequestInput({
     errorMessage: 'Invalid request body',
     schema: userSchemas.updateUserBodySchema,
     values: req.body,
@@ -60,7 +61,7 @@ export async function updateUserController(req, res) {
     ...patchFields,
   };
 
-  const result = await userServices.updateUserService(userData);
+  const { data } = await userServices.updateUserService(userData);
 
-  return res.status(200).json(success(result.data));
+  return res.status(200).json(success({ data }));
 }

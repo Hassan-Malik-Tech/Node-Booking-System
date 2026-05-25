@@ -1,4 +1,4 @@
-import AppError from './AppError.js'
+import AppError from './AppError.js';
 
 function translatePgError(error) {
   // ---------------------------------------------------------------------------
@@ -155,13 +155,6 @@ function translatePgError(error) {
   // ---------------------------------------------------------------------------
 
   if (error.code === '23514') {
-    if (error.constraint === 'users_username_no_space_check') {
-      return AppError.badRequest('Username cannot contain spaces', {
-        code: 'USERNAME_CONTAINS_SPACES',
-        cause: error,
-      });
-    }
-
     if (error.constraint === 'resources_no_multi_space_name_check') {
       return AppError.badRequest(
         'Resource name cannot contain repeated spaces',
@@ -172,16 +165,15 @@ function translatePgError(error) {
       );
     }
 
+    // Trigger would cover reverse soft delete,
+    // so the only other scenario is to translate
+    // a client's request to activate a deleted resource.
     if (error.constraint === 'valid_is_active_deleted_at_check') {
       return AppError.badRequest('You cannot activate a deleted resource', {
         code: 'CANNOT_ACTIVATE_DELETED_RESOURCE',
         cause: error,
       });
     }
-
-    // Trigger would cover reverse soft delete,
-    // so the only other scenario is to translate
-    // a client's request to activate a deleted resource.
 
     if (error.constraint === 'availability_windows_half_hour_boundary_check') {
       return AppError.badRequest(
@@ -249,18 +241,11 @@ function translatePgError(error) {
     // irreversible lifecycle blockers
     // -------------------------------------------------------------------------
 
-    if (
-      error.message.includes(
-        'Reservation completion is irreversible, make a new reservation instead.',
-      )
-    ) {
-      return AppError.conflict(
-        'Reservation completion is irreversible. Make a new reservation instead.',
-        {
-          code: 'RESERVATION_COMPLETION_IRREVERSIBLE',
-          cause: error,
-        },
-      );
+    if (error.message.includes('Reservation completion is irreversible.')) {
+      return AppError.conflict('Reservation completion is irreversible.', {
+        code: 'RESERVATION_COMPLETION_IRREVERSIBLE',
+        cause: error,
+      });
     }
     // I plan on adding an employee role to the users table in Step 8,
     // so this can be useful for employees and admins, not regular users.
@@ -352,7 +337,7 @@ function translatePgError(error) {
     });
   }
 
-  return null; 
+  return null;
 }
 
 export default translatePgError;

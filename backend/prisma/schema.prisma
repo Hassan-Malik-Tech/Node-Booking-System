@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js" // prisma is moving away from this, but it still works in v7.8
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Prisma is used as a query tool in this SQL-first project(so I dont need performance indexes in this schema).
+// PostgreSQL schema files own migrations, indexes, constraints, and triggers.
+
+model User {
+  id           Int       @id @default(autoincrement())
+  username     String
+  passwordHash String    @map("password_hash")
+  name         String?
+  email        String
+  role         String    @default("user")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  ownedResources             Resource[]    
+  reservations               Reservation[] @relation("ReservationUser")
+  staffCompletedReservations Reservation[] @relation("ReservationStaffCompleter")
+
+  @@map("users")
+}
+
+model Resource {
+  id          Int       @id @default(autoincrement())
+  ownerId     Int       @map("owner_id")
+  name        String
+  description String?
+  capacity    Int
+  isActive    Boolean   @default(true) @map("is_active")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // owner includes the info about the owner, unlike ownerId which is just the id of the owner.
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "resources_owner_id_fkey")
+
+  availabilityWindows AvailabilityWindow[]
+  reservations        Reservation[]
+
+  @@map("resources")
+}
+
+model AvailabilityWindow {
+  id                        Int       @id @default(autoincrement())
+  resourceId                Int       @map("resource_id")
+  startTime                 DateTime  @map("start_time") @db.Timestamptz(6)
+  endTime                   DateTime  @map("end_time") @db.Timestamptz(6)
+  createdAt                 DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                 DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  deletedAt                 DateTime? @map("deleted_at") @db.Timestamptz(6)
+  cancellationNoticeMinutes Int       @default(0) @map("cancellation_notice_minutes")
+
+  resource         Resource                            @relation(fields: [resourceId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "availability_windows_resource_id_fkey")
+
+  allowedDurations AvailabilityWindowAllowedDuration[]
+  reservations     Reservation[]
+
+  @@unique([id, resourceId], map: "availability_windows_id_resource_id_key")
+  @@map("availability_windows")
+}
+
+model AvailabilityWindowAllowedDuration {
+  id                   Int @id @default(autoincrement())
+  availabilityWindowId Int @map("availability_window_id")
+  durationMinutes      Int @map("duration_minutes")
+
+  availabilityWindow AvailabilityWindow @relation(fields: [availabilityWindowId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "awad_aw_id_fkey")
+
+  @@unique([availabilityWindowId, durationMinutes], map: "unique_window_duration_per_window")
+  @@map("availability_window_allowed_durations")
+}
+
+model Reservation {
+  id                     Int       @id @default(autoincrement())
+  resourceId             Int       @map("resource_id")
+  availabilityWindowId   Int       @map("availability_window_id")
+  userId                 Int       @map("user_id")
+  staffCompletedByUserId Int?      @map("staff_completed_by_user_id")
+  startTime              DateTime  @map("start_time") @db.Timestamptz(6)
+  endTime                DateTime  @map("end_time") @db.Timestamptz(6)
+  status                 String    @default("active")
+  cancelledAt            DateTime? @map("cancelled_at") @db.Timestamptz(6)
+  systemCompletedAt      DateTime? @map("system_completed_at") @db.Timestamptz(6)
+  staffCompletedAt       DateTime? @map("staff_completed_at") @db.Timestamptz(6)
+  createdAt              DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  partySize              Int       @map("party_size")
+
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "reservations_resource_id_fkey")
+
+  availabilityWindow AvailabilityWindow @relation(fields: [availabilityWindowId, resourceId], references: [id, resourceId], onDelete: Restrict, onUpdate: NoAction, map: "reservations_window_resource_fkey")
+
+  // "ReservationUser" and "ReservationStaffCompleter" are needed as Reservation has more than one relation with User.
+  // In order for prisma to know the relation it needs to be named.
+
+  user User @relation("ReservationUser", fields: [userId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "reservations_user_id_fkey")
+
+  staffCompletedBy User? @relation("ReservationStaffCompleter", fields: [staffCompletedByUserId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "reservations_staff_completed_by_user_id_fkey")
+
+  @@map("reservations")
+}

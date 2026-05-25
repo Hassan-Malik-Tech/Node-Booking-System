@@ -7,7 +7,7 @@ export default function errorHandler(err, req, res, next) {
   if (err.type === 'entity.parse.failed') {
     return res
       .status(err.status)
-      .json(error(ERROR_CODES.INVALID_JSON, 'Invalid JSON'));
+      .json(error({ code: ERROR_CODES.INVALID_JSON, message: 'Invalid JSON' }));
   }
 
   if (err instanceof AppError) {
@@ -17,14 +17,16 @@ export default function errorHandler(err, req, res, next) {
 
     return res
       .status(err.statusCode)
-      .json(error(err.code, err.message, err.details));
+      .json(
+        error({ code: err.code, message: err.message, details: err.details }),
+      );
   }
 
   console.error(err); // logs unknown errors that bypass the 2 conditionals above
 
   return res
     .status(500)
-    .json(error(ERROR_CODES.INTERNAL_ERROR, 'server error'));
+    .json(error({ code: ERROR_CODES.INTERNAL_ERROR, message: 'server error' }));
 }
 
 // I used err.status for invalid json(comes by default) and err.statusCode AppError class because they are available.

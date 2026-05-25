@@ -76,9 +76,99 @@ export async function countActiveUsers(filters) {
   return result.rows[0].total;
 } // this function is for pagination info for '/api/users'
 
+export async function createUserForRegistration(userData) {
+  const { username, passwordHash, name, email } = userData;
+
+  const sql = `
+    INSERT INTO users (username, password_hash, name, email, role)
+    VALUES ($1, $2, $3, $4, 'user')
+    RETURNING
+      id,
+      username,
+      name,
+      email,
+      role,
+      created_at,
+      updated_at
+  `;
+
+  const result = await db.query(sql, [
+    username,
+    passwordHash,
+    name ?? null,
+    email,
+  ]);
+
+  return result.rows[0];
+}
+
+export async function activeUsernameExists(username) {
+  const sql = `
+    SELECT EXISTS (
+      SELECT 1
+      FROM users
+      WHERE lower(username) = lower($1)
+        AND deleted_at IS NULL
+    ) AS exists
+  `;
+
+  const result = await db.query(sql, [username]);
+
+  return result.rows[0].exists; // returns a boolean
+}
+
+export async function activeEmailExists(email) {
+  const sql = `
+    SELECT EXISTS (
+      SELECT 1
+      FROM users
+      WHERE lower(email) = lower($1)
+        AND deleted_at IS NULL
+    ) AS exists
+  `;
+
+  const result = await db.query(sql, [email]);
+
+  return result.rows[0].exists;
+}
+
+export async function getActiveUserForLogin(username) {
+  const sql = `
+    SELECT
+      id,
+      username,
+      password_hash,
+      name,
+      email,
+      role,
+      created_at,
+      updated_at
+    FROM users
+    WHERE lower(username) = lower($1)
+      AND deleted_at IS NULL
+  `;
+
+  const result = await db.query(sql, [username]);
+
+  return result.rows[0] ?? null;
+}
+
+export async function getCurrentUserForAuth(userId) {
+  const sql = `
+    SELECT role
+    FROM users
+    WHERE id = $1
+      AND deleted_at IS NULL
+  `;
+
+  const result = await db.query(sql, [userId]);
+
+  return result.rows[0] ?? null;
+}
+
 export async function getActiveUserById(userId) {
   const sql = `
-    SELECT 
+     SELECT
       id,
       username,
       name,
@@ -94,75 +184,4 @@ export async function getActiveUserById(userId) {
   const result = await db.query(sql, [userId]);
 
   return result.rows[0] ?? null;
-} // for  GET '/api/users/:userId'
-
-export async function createUser(userData) {
-  const { username, name, email, role } = userData;
-
-  const sql = `
-    INSERT INTO users (username, name, email, role)
-    VALUES ($1, $2, $3, $4)
-    RETURNING
-      id,
-      username,
-      name,
-      email,
-      role,
-      created_at,
-      updated_at
-  `;
-
-  const result = await db.query(sql, [username, name ?? null, email, role]);
-  // use the ?? pattern with other nullable columns
-  // When js null is passed through pg, it becomes SQL NULL.
-
-  return result.rows[0];
-} // for POST '/api/users'
-
-export async function updateUser(userData) {
-  const { userId, username, name, email } = userData;
-
-  const columns = [];
-  const values = [];
-
-  values.push(userId);
-
-  const userIdPlaceHolder = `$${values.length}`;
-
-  if (username !== undefined) {
-    values.push(username);
-    columns.push(`username = $${values.length}`);
-  }
-
-  if (name !== undefined) {
-    values.push(name);
-    columns.push(`name = $${values.length}`);
-  }
-
-  if (email !== undefined) {
-    values.push(email);
-    columns.push(`email = $${values.length}`);
-  }
-
-  const setClause = columns.join(', '); // the space is there for error logging readability purposes
-
-  const sql = `
-    UPDATE users
-    SET ${setClause}
-    WHERE id = ${userIdPlaceHolder}
-      AND deleted_at IS NULL
-    RETURNING
-      id,
-      username,
-      name,
-      email,
-      role,
-      created_at,
-      updated_at
-  `;
-
-  const result = await db.query(sql, values);
-
-  return result.rows[0];
 }
-// updating role is deferred to step 8

@@ -16,3 +16,19 @@ function logger(req, res, next) {
 }
 
 export default logger;
+
+
+/*
+function logError(err, req) {
+  console.error({
+    name: err.name,
+    message: err.message,
+    code: err.code,
+    statusCode: err.statusCode,
+    method: req.method,
+    url: req.originalUrl,
+    stack: err.stack,
+    cause: getCauseForLog(err.cause),
+  });
+}
+*/

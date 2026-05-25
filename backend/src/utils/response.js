@@ -1,4 +1,4 @@
-function error(code, message, details) {
+function error({ code, message, details }) {
   const response = {
     success: false,
     error: {
@@ -14,7 +14,7 @@ function error(code, message, details) {
   return response;
 }
 
-function success(data, pagination) {
+function success({ data, pagination }) {
   const response = { success: true, data };
 
   if (pagination !== undefined) {

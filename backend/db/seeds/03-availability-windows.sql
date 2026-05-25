@@ -5,7 +5,7 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active-owner1') AND (deleted_at IS NULL)))
+       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
        AND (name = 'Meeting Room 1') 
        AND (deleted_at IS NULL)
     ),
@@ -18,7 +18,7 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active-owner1') AND (deleted_at IS NULL)))
+       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
        AND (name = 'Meeting Room 1') 
        AND (deleted_at IS NULL)
     ),
@@ -33,7 +33,7 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active-owner2') AND (deleted_at IS NULL)))
+       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner2') AND (deleted_at IS NULL)))
        AND (name = 'Meeting Room 1') 
        AND (deleted_at IS NULL)
     ),
@@ -46,7 +46,7 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active-owner2') AND (deleted_at IS NULL)))
+       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner2') AND (deleted_at IS NULL)))
        AND (name = 'Meeting Room 1') 
        AND (deleted_at IS NULL)
     ),
@@ -61,7 +61,7 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active-owner1') AND (deleted_at IS NULL)))
+       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
        AND (name = 'Soccer Field') 
        AND (deleted_at IS NULL)
     ),
@@ -74,7 +74,7 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active-owner1') AND (deleted_at IS NULL)))
+       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
        AND (name = 'Soccer Field') 
        AND (deleted_at IS NULL)
     ),
@@ -89,7 +89,7 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active-owner1') AND (deleted_at IS NULL)))
+       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
        AND (name = 'Basket Ball Court') 
        AND (deleted_at IS NULL)
     ),
@@ -104,7 +104,7 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active-owner2') AND (deleted_at IS NULL)))
+       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner2') AND (deleted_at IS NULL)))
        AND (name = 'Tennis Court') 
        AND (deleted_at IS NULL)
     ),
@@ -117,7 +117,7 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active-owner2') AND (deleted_at IS NULL)))
+       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner2') AND (deleted_at IS NULL)))
        AND (name = 'Tennis Court') 
        AND (deleted_at IS NULL)
     ),
@@ -132,7 +132,7 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active-owner1') AND (deleted_at IS NULL)))
+       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
        AND (name = 'Gym') 
        AND (deleted_at IS NULL)
     ),
@@ -145,7 +145,7 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active-owner1') AND (deleted_at IS NULL)))
+       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
        AND (name = 'Gym') 
        AND (deleted_at IS NULL)
     ),
@@ -160,7 +160,7 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active-owner1') AND (deleted_at IS NULL)))
+       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
        AND (name = 'Meeting Room 1') 
        AND (deleted_at = '2026-02-24T9:00:00Z')
     ),
@@ -173,7 +173,7 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active-owner1') AND (deleted_at IS NULL)))
+       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
        AND (name = 'Meeting Room 1') 
        AND (deleted_at = '2026-02-24T9:00:00Z')
     ),
