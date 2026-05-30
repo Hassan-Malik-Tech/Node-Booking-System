@@ -1,5 +1,11 @@
 import Joi from 'joi';
-import { commonListFilters } from './commonSchemas.js';
+import {
+  commonListFilters,
+  usernameSchema,
+  emailSchema,
+  nameSchema,
+  makeNewPasswordSchema,
+} from './commonSchemas.js';
 
 export const listActiveUsersQuerySchema = Joi.object({
   ...commonListFilters,
@@ -14,17 +20,22 @@ export const getActiveUserByIdParamsSchema = Joi.object({
   userId: Joi.number().integer().min(1).required(),
 });
 
-export const createUserBodySchema = Joi.object({
-  username: Joi.string().trim().min(1).required(),
-  name: Joi.string().trim().min(1).optional(),
-  email: Joi.string().trim().lowercase().email().required(),
-  role: Joi.string().trim().valid('user', 'admin').default('user'),
-});
-
 export const updateUserBodySchema = Joi.object({
-  username: Joi.string().trim().min(1).optional(),
-  name: Joi.string().trim().min(1).allow(null).optional(), // allow(null) to allow clearing name
-  email: Joi.string().trim().lowercase().email().optional(),
+  username: usernameSchema.optional(),
+  name: nameSchema,
+  email: emailSchema.optional(),
 })
   .min(1)
-  .required();
+  .required()
+  .messages({
+    'object.base': 'Request body must be an object.',
+    'object.min': 'At least one profile field is required.',
+  });
+
+export const updatePasswordBodySchema = Joi.object({
+  password: makeNewPasswordSchema(),
+})
+  .required()
+  .messages({
+    'object.base': 'Request body must be an object.',
+  });

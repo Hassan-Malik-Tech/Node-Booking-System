@@ -6,8 +6,21 @@ import crypto from 'node:crypto';
 // 0 1 2 3 4 5 6 7 8 9 a b c d e f
 // Each byte becomes 2 hex characters (8 * 2 = 16).
 // It can return a string like 9f2a8c01be44d6aa for example.
-function generateRandomId() {
+export function generateRandomId() {
   return crypto.randomBytes(8).toString('hex');
 }
 
-export default generateRandomId;
+export function generateRandomUsername() {
+  const id = generateRandomId();
+  return `test_user_${id}`;
+}
+
+export function generateRandomEmail() {
+  const id = generateRandomId();
+  return `testemail_${id}@test.com`;
+}
+
+export function generateRandomResourceName() {
+  const id = generateRandomId();
+  return `test-resource-${id}`;
+}

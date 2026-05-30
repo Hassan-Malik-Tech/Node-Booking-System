@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import config from '../config';
+import config from '../config/index.js';
 
 export const BCRYPT_MAX_BYTES = 72; // the byte limit for bcrypt
 export const PASSWORD_MIN_LENGTH = 15; // 15 is recommeded for SFA

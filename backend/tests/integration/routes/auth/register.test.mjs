@@ -7,6 +7,7 @@ import {
   rebuildTestDb,
   closeTestDbPool,
 } from '../../../helpers/rebuildTestDb.mjs';
+import { expectNoPasswordFields } from '../../../helpers/assertions.mjs';
 
 beforeAll(async () => {
   await rebuildTestDb();
@@ -64,9 +65,7 @@ describe('/api/auth', () => {
           .send(buildRegisterRequestBody());
 
         expect(response.status).toBe(201);
-        expect(response.body.data.password).toBeUndefined();
-        expect(response.body.data.passwordHash).toBeUndefined();
-        expect(response.body.data.password_hash).toBeUndefined();
+        expectNoPasswordFields(response.body.data);
       });
     });
 

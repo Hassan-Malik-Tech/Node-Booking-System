@@ -8,6 +8,10 @@ import {
   rebuildTestDb,
   closeTestDbPool,
 } from '../../../helpers/rebuildTestDb.mjs';
+import {
+  expectNoPasswordFields,
+  expectInvalidCredentialsResponse,
+} from '../../../helpers/assertions.mjs';
 
 beforeAll(async () => {
   await rebuildTestDb();
@@ -66,9 +70,7 @@ describe('/api/auth', () => {
           .send({ username, password: TEST_PASSWORD });
 
         expect(response.status).toBe(200);
-        expect(response.body.data.user.password).toBeUndefined();
-        expect(response.body.data.user.passwordHash).toBeUndefined();
-        expect(response.body.data.user.password_hash).toBeUndefined();
+        expectNoPasswordFields(response.body.data.user);
       });
     });
 
@@ -178,14 +180,7 @@ describe('/api/auth', () => {
             .post('/api/auth/login')
             .send({ username, password: TEST_PASSWORD });
 
-          expect(response.status).toBe(401);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'INVALID_CREDENTIALS',
-              message: 'Invalid username or password.',
-            },
-          });
+          expectInvalidCredentialsResponse(response);
         });
 
         test('when password is incorrect', async () => {
@@ -195,14 +190,7 @@ describe('/api/auth', () => {
             .post('/api/auth/login')
             .send({ username, password: '123456789abcdefgh' });
 
-          expect(response.status).toBe(401);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'INVALID_CREDENTIALS',
-              message: 'Invalid username or password.',
-            },
-          });
+          expectInvalidCredentialsResponse(response);
         });
       });
     });

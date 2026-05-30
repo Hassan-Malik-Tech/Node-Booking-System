@@ -1,16 +1,17 @@
 import { beforeAll, afterAll, describe, expect, test } from '@jest/globals';
 import request from 'supertest';
 import app from '../../../../src/app.js';
-import { buildRegisterRequestBody } from '../../../helpers/postRequestBodies.mjs';
-import {
-  createTestUser,
-  createAuthenticatedTestUser,
-} from '../../../helpers/createTestData.mjs';
-import { TEST_PASSWORD } from '../../../helpers/testConstants.mjs';
+import { createAuthenticatedTestUser } from '../../../helpers/createTestData.mjs';
 import {
   rebuildTestDb,
   closeTestDbPool,
 } from '../../../helpers/rebuildTestDb.mjs';
+import {
+  expectNoPasswordFields,
+  expectAuthRequiredResponse,
+  expectInvalidTokenResponse,
+} from '../../../helpers/assertions.mjs';
+import { softDeleteTestUser } from '../../../helpers/updateTestData.mjs';
 
 beforeAll(async () => {
   await rebuildTestDb();
@@ -50,24 +51,70 @@ describe('/api/me', () => {
         });
       });
 
-      test('does not return password or password hash', async () => {});
+      test('does not return password or password hash', async () => {
+        const { accessToken } = await createAuthenticatedTestUser();
 
-      test('uses current user role from database state', async () => {});
+        const response = await request(app)
+          .get('/api/me')
+          .set('Authorization', `Bearer ${accessToken}`);
+
+        expect(response.status).toBe(200);
+        expectNoPasswordFields(response.body.data);
+      });
     });
 
+    // extractBearerToken()
     describe('unhappy path', () => {
       describe('returns 401 AUTHENTICATION_REQUIRED with correct response', () => {
-        test('when Authorization header is missing', async () => {});
+        test('when Authorization header is missing', async () => {
+          const response = await request(app).get('/api/me');
+
+          expectAuthRequiredResponse(response);
+        });
       });
 
+      // extractBearerToken()
       describe('returns 401 INVALID_AUTHORIZATION_HEADER with correct response', () => {
-        test('when Authorization header format is invalid', async () => {});
+        test('when Authorization header format is invalid', async () => {
+          const response = await request(app)
+            .get('/api/me')
+            .set('Authorization', 'not-a-bearer-token');
+
+          expect(response.status).toBe(401);
+          expect(response.body).toEqual({
+            success: false,
+            error: {
+              code: 'INVALID_AUTHORIZATION_HEADER',
+              message: 'Invalid authorization header',
+            },
+          });
+        });
       });
 
+      // verifyAccessToken()
       describe('returns 401 INVALID_TOKEN with correct response', () => {
-        test('when token is invalid or expired', async () => {});
+        test('when token is invalid', async () => {
+          const response = await request(app)
+            .get('/api/me')
+            .set('Authorization', 'Bearer invalid-token');
 
-        test('when token user no longer exists or is soft deleted', async () => {});
+          expectInvalidTokenResponse(response);
+        });
+
+        // This test proves loadCurrentStateOfAuthUser blocks soft deleted users
+        test('when token user is soft deleted', async () => {
+          const { user, accessToken } = await createAuthenticatedTestUser();
+
+          const deletedUser = await softDeleteTestUser(user.id);
+
+          expect(deletedUser.deleted_at).toBeDefined();
+
+          const response = await request(app)
+            .get('/api/me')
+            .set('Authorization', `Bearer ${accessToken}`);
+
+          expectInvalidTokenResponse(response);
+        });
       });
     });
   });

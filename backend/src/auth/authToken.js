@@ -2,6 +2,7 @@ import { SignJWT, jwtVerify } from 'jose';
 import config from '../config/index.js';
 import AppError from '../errors/AppError.js';
 import ERROR_CODES from '../errors/errorCodes.js';
+import { invalidTokenError } from '../errors/commonErrors.js';
 
 // converts secret into bytes as jose needs byte key material for signing and verifying tokens.
 const jwtSecret = new TextEncoder().encode(config.jwt.secret);
@@ -15,6 +16,7 @@ export function signAccessToken(user) {
       // can technically put sub or iat or exp etc in here as well
       // but jose build in methods are prefered
       role: user.role,
+      tokenVersion: user.token_version,
     })
       .setProtectedHeader({ alg: JWT_ALGORITHM })
       .setSubject(String(user.id))
@@ -48,22 +50,24 @@ const VALID_ROLES = new Set(['user', 'employee', 'admin']);
 
 export function buildAuthContext(payload) {
   const userId = Number(payload.sub);
+  const tokenVersion = payload.tokenVersion;
+
+  if (!Number.isInteger(tokenVersion) || tokenVersion < 0) {
+    throw invalidTokenError();
+  }
 
   if (!Number.isInteger(userId) || userId <= 0) {
-    throw AppError.unauthorized('Invalid or expired token.', {
-      code: ERROR_CODES.INVALID_TOKEN,
-    });
+    throw invalidTokenError();
   }
 
   if (!VALID_ROLES.has(payload.role)) {
-    throw AppError.unauthorized('Invalid or expired token.', {
-      code: ERROR_CODES.INVALID_TOKEN,
-    });
+    throw invalidTokenError();
   }
 
   // used for req.auth
   return {
     userId,
     role: payload.role,
+    tokenVersion,
   };
 }

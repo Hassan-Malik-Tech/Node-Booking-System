@@ -4,6 +4,7 @@ CREATE TABLE users (
   password_hash TEXT NOT NULL,
   name TEXT,
   email TEXT NOT NULL, 
+  token_version INTEGER NOT NULL DEFAULT 0, -- for token revocation after password change or other situations (update it with +1)
   -- enforce valid email in the backend (tricky as there are unusual valid emails like user@[192.168.1.10])
   role TEXT NOT NULL DEFAULT 'user', 
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

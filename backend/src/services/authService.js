@@ -65,7 +65,7 @@ export async function loginUser(userData) {
     const { username, password } = userData;
     const INVALID_CREDENTIALS_MESSAGE = 'Invalid username or password.';
 
-    const foundUser = await userQueries.getActiveUserForLogin(username);
+    const foundUser = await userQueries.getActiveUserByUsername(username);
 
     if (!foundUser) {
       throw AppError.unauthorized(INVALID_CREDENTIALS_MESSAGE);

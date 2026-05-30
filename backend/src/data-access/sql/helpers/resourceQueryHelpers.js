@@ -6,8 +6,15 @@ export function buildActiveResourcesWhereClause(search) {
     values.push(`%${search}%`);
 
     const searchPlaceholder = `$${values.length}`;
-    conditions.push(`name ILIKE ${searchPlaceholder}`);
+    conditions.push(`
+      (
+        name ILIKE ${searchPlaceholder}
+        OR description ILIKE ${searchPlaceholder}
+      )
+    `);
   }
 
-  return { values, whereClause: conditions.join(' AND ') };
+  const whereClause = conditions.join(' AND ');
+
+  return { values, whereClause };
 }

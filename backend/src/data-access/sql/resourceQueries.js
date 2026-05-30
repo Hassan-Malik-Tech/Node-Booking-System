@@ -84,3 +84,52 @@ export async function getActiveResourceById(resourceId) {
 
   return result.rows[0] ?? null;
 }
+
+export async function createResource(resourceData) {
+  const {
+    ownerId,
+    name,
+    description = null,
+    capacity,
+    isActive = true,
+  } = resourceData;
+
+  const sql = `
+    INSERT INTO resources (owner_id, name, description, capacity, is_active)
+    VALUES ($1, $2, $3, $4, $5)
+    RETURNING
+      id,
+      owner_id,
+      name,
+      description,
+      capacity,
+      is_active,
+      created_at,
+      updated_at
+  `;
+
+  const result = await db.query(sql, [
+    ownerId,
+    name,
+    description,
+    capacity,
+    isActive,
+  ]);
+
+  return result.rows[0];
+}
+
+export async function softDeleteResourceById(resourceId) {
+  const sql = `
+    UPDATE resources
+    SET deleted_at = NOW(),
+      is_active = false
+    WHERE id = $1
+      AND deleted_at IS NULL
+    RETURNING id
+  `;
+
+  const result = await db.query(sql, [resourceId]);
+
+  return result.rows[0] ?? null;
+}

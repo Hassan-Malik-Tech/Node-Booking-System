@@ -33,25 +33,6 @@ async function runSchemaSql() {
   await db.query(schemaSql);
 }
 
-async function seedTestDb() {
-  const usersSeedSql = await readSql('db/seeds/01-users.sql');
-  await db.query(usersSeedSql);
-
-  const resourcesSeedSql = await readSql('db/seeds/02-resources.sql');
-  await db.query(resourcesSeedSql);
-
-  const windowsSeedSql = await readSql('db/seeds/03-availability-windows.sql');
-  await db.query(windowsSeedSql);
-
-  const durationsSeedSql = await readSql(
-    'db/seeds/04-availability-window-allowed-durations.sql',
-  );
-  await db.query(durationsSeedSql);
-
-  const reservationsSeedSql = await readSql('db/seeds/05-reservations.sql');
-  await db.query(reservationsSeedSql);
-}
-
 async function runFunctions() {
   const functionsSql = await readSql('db/functions.sql');
   await db.query(functionsSql);
@@ -74,7 +55,6 @@ async function rebuildTestDb() {
   try {
     await resetTestDb();
     await runSchemaSql();
-    await seedTestDb();
     await runFunctions();
     await runTriggers();
   } catch (error) {

@@ -1,6 +1,7 @@
 import * as db from '../../db/db.js';
 import { buildActiveUsersWhereClause } from './helpers/userQueryHelpers.js';
 import { getOrderByParts } from './helpers/commonQueryHelpers.js';
+import { buildSetClause } from './helpers/commonQueryHelpers.js';
 
 const USER_SORT_COLUMNS = {
   createdAt: 'created_at',
@@ -76,8 +77,10 @@ export async function countActiveUsers(filters) {
   return result.rows[0].total;
 } // this function is for pagination info for '/api/users'
 
+// returns token_version because my test functions use this
+// to create new users and sign them, signing requires token_version.
 export async function createUserForRegistration(userData) {
-  const { username, passwordHash, name, email } = userData;
+  const { username, passwordHash, name = null, email } = userData;
 
   const sql = `
     INSERT INTO users (username, password_hash, name, email, role)
@@ -88,16 +91,12 @@ export async function createUserForRegistration(userData) {
       name,
       email,
       role,
+      token_version,
       created_at,
       updated_at
   `;
 
-  const result = await db.query(sql, [
-    username,
-    passwordHash,
-    name ?? null,
-    email,
-  ]);
+  const result = await db.query(sql, [username, passwordHash, name, email]);
 
   return result.rows[0];
 }
@@ -132,7 +131,7 @@ export async function activeEmailExists(email) {
   return result.rows[0].exists;
 }
 
-export async function getActiveUserForLogin(username) {
+export async function getActiveUserByUsername(username) {
   const sql = `
     SELECT
       id,
@@ -141,6 +140,7 @@ export async function getActiveUserForLogin(username) {
       name,
       email,
       role,
+      token_version,
       created_at,
       updated_at
     FROM users
@@ -153,9 +153,17 @@ export async function getActiveUserForLogin(username) {
   return result.rows[0] ?? null;
 }
 
-export async function getCurrentUserForAuth(userId) {
+export async function getActiveUserById(userId) {
   const sql = `
-    SELECT role
+     SELECT
+      id,
+      username,
+      name,
+      email,
+      role,
+      token_version,
+      created_at,
+      updated_at
     FROM users
     WHERE id = $1
       AND deleted_at IS NULL
@@ -166,9 +174,26 @@ export async function getCurrentUserForAuth(userId) {
   return result.rows[0] ?? null;
 }
 
-export async function getActiveUserById(userId) {
+export async function updateActiveUserById({ userId, updateData }) {
+  const { username, name, email } = updateData;
+
+  const { values, setClause } = buildSetClause({ username, name, email });
+
+  // joi should validate the body, just an extra query gaurd.
+  // This may be useful if the function is called outside of the service.
+  if (setClause.length === 0) {
+    return null;
+  }
+
+  values.push(userId);
+  const idPlaceholder = `$${values.length}`;
+
   const sql = `
-     SELECT
+    UPDATE users
+    SET ${setClause}
+    WHERE id = ${idPlaceholder}
+      AND deleted_at IS NULL
+    RETURNING
       id,
       username,
       name,
@@ -176,12 +201,29 @@ export async function getActiveUserById(userId) {
       role,
       created_at,
       updated_at
-    FROM users
-    WHERE id = $1
-      AND deleted_at IS NULL
   `;
 
-  const result = await db.query(sql, [userId]);
+  const result = await db.query(sql, values);
+
+  // deleted_at IS NULL may match no rows, so use ?? null for that situation.
+  return result.rows[0] ?? null;
+}
+
+// Return just enough to know that the password update was successful (the id).
+// Update token_version to revoke token after updating the password.
+// The token version in the current user is compared with the one in the old token (which has the old token_version)
+// if they are different, it throws invalidTokenError.
+export async function updatePassword({ userId, passwordHash }) {
+  const sql = `
+    UPDATE users
+    SET password_hash = $1,
+      token_version = token_version + 1
+    WHERE id = $2
+      AND deleted_at IS NULL
+    RETURNING id
+  `;
+
+  const result = await db.query(sql, [passwordHash, userId]);
 
   return result.rows[0] ?? null;
 }

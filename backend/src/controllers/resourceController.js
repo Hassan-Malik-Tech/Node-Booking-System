@@ -1,31 +1,21 @@
-import * as resourceServices from '../services/resourceService.js';
+import * as resourceService from '../services/resourceService.js';
 import * as resourceSchemas from '../validators/resourceSchemas.js';
 import { success } from '../utils/response.js';
 import validateRequestInput from '../utils/validateRequestInput.js';
 
-export async function listActiveResourcesController(req, res) {
-  const queryParams = validateRequestInput({
-    errorMessage: 'Invalid query params',
-    schema: resourceSchemas.listActiveResourcesQuerySchema,
-    values: req.query,
-  });
+export async function listActiveResources(req, res) {
+  const queryParams = req.validated.query;
 
   const { data, pagination } =
-    await resourceServices.listActiveResourcesService(queryParams);
+    await resourceService.listActiveResources(queryParams);
 
   return res.status(200).json(success({ data, pagination }));
 }
 
-export async function getActiveResourceByIdController(req, res) {
-  const params = validateRequestInput({
-    errorMessage: 'Invalid resourceId parameter',
-    schema: resourceSchemas.getActiveResourceByIdParamsSchema,
-    values: req.params,
-  });
+export async function getActiveResourceById(req, res) {
+  const resourceId = req.validated.params.resourceId;
 
-  const { data } = await resourceServices.getActiveResourceByIdService(
-    params.resourceId,
-  );
+  const { data } = await resourceService.getActiveResourceById(resourceId);
 
   return res.status(200).json(success({ data }));
 }
