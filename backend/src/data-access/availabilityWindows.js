@@ -20,3 +20,6 @@ export const createAllowedDuration =
 
 export const createAllowedDurations =
   sqlAvailabilityWindowQueries.createAllowedDurations;
+
+export const createAvailabilityWindowsWithDurations =
+  sqlAvailabilityWindowQueries.createAvailabilityWindowsWithDurations;

@@ -13,3 +13,38 @@ export function buildRegisterRequestBody(overrides = {}) {
     ...overrides,
   };
 }
+
+// For some reason the JSON response from express
+// sends '2036-01-01T09:00:00.000Z'
+// even if i send '2036-01-01T09:00:00Z'
+export function buildCreateAvailabilityWindowRequestBody(overrides = {}) {
+  return {
+    startTime: '2036-01-01T09:00:00.000Z',
+    endTime: '2036-01-01T17:00:00.000Z',
+    cancellationNoticeMinutes: 60,
+    allowedDurations: [30, 60],
+    ...overrides,
+  };
+}
+
+export function buildCreateAvailabilityWindowsBulkRequestBody({
+  firstWindowOverrides = {},
+  secondWindowOverrides = {},
+} = {}) {
+  return [
+    {
+      startTime: '2036-01-01T09:00:00.000Z',
+      endTime: '2036-01-01T17:00:00.000Z',
+      cancellationNoticeMinutes: 90,
+      allowedDurations: [30, 60],
+      ...firstWindowOverrides,
+    },
+    {
+      startTime: '2036-01-02T09:00:00.000Z',
+      endTime: '2036-01-02T17:00:00.000Z',
+      cancellationNoticeMinutes: 60,
+      allowedDurations: [45, 60],
+      ...secondWindowOverrides,
+    },
+  ];
+}

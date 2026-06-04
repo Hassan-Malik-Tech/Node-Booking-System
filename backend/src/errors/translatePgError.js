@@ -293,7 +293,7 @@ function translatePgError(error) {
       return AppError.conflict(
         'Cannot create availability windows for a deleted resource',
         {
-          code: 'WINDOW_RESOURCE_DELETED',
+          code: 'RESOURCE_DELETED',
           cause: error,
         },
       );
@@ -307,7 +307,7 @@ function translatePgError(error) {
       return AppError.conflict(
         'Cannot create availability windows for an inactive resource',
         {
-          code: 'WINDOW_RESOURCE_INACTIVE',
+          code: 'RESOURCE_INACTIVE',
           cause: error,
         },
       );

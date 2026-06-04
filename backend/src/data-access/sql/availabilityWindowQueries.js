@@ -165,7 +165,7 @@ export async function countAvailabilityWindows(filters) {
   return result.rows[0].total;
 }
 
-export async function createAvailabilityWindow(windowData) {
+export async function createAvailabilityWindow({ windowData, client = db }) {
   const { resourceId, startTime, endTime, cancellationNoticeMinutes } =
     windowData;
 
@@ -188,7 +188,7 @@ export async function createAvailabilityWindow(windowData) {
       deleted_at
   `;
 
-  const result = await db.query(sql, [
+  const result = await client.query(sql, [
     resourceId,
     startTime,
     endTime,
@@ -246,7 +246,11 @@ export async function getAvailabilityWindowById(windowId) {
   return result.rows[0] ?? null;
 }
 
-export async function createAllowedDuration({ windowId, minutes }) {
+export async function createAllowedDuration({
+  windowId,
+  minutes,
+  client = db,
+}) {
   // Need the double quotes because Postgres would lowercase
   // durationMinutes to durationminutes.
   const sql = `
@@ -260,33 +264,41 @@ export async function createAllowedDuration({ windowId, minutes }) {
       duration_minutes AS "minutes"
   `;
 
-  const result = await db.query(sql, [windowId, minutes]);
+  const result = await client.query(sql, [windowId, minutes]);
 
   return result.rows[0];
 }
 
-export async function createAllowedDurations({ windowId, minutesList }) {
-  const allowedDurations = await Promise.all(
-    minutesList.map((minutes) =>
-      createAllowedDuration({
-        windowId,
-        minutes,
-      }),
-    ),
-  );
+export async function createAllowedDurations({
+  windowId,
+  minutesList,
+  client = db,
+}) {
+  const allowedDurations = [];
+
+  minutesList.sort((a, b) => a - b);
+
+  for (const minutes of minutesList) {
+    const allowedDuration = await createAllowedDuration({
+      windowId,
+      minutes,
+      client,
+    });
+
+    allowedDurations.push(allowedDuration);
+  }
 
   return allowedDurations;
 }
-
 /*
 The functions above if this is passed in:
 
 const rows = await createAllowedDurations({
   windowId: 1,
-  minutes: [30, 60, 90],
+  minutesList: [90, 30, 60],
 });
 
-returns something like:
+returns:
 
 [
   {
@@ -305,3 +317,51 @@ returns something like:
 
 This is the same format as my availability windows list function for JSON_AGG, so It can be used for tests without remapping.
 */
+
+export async function createAvailabilityWindowsWithDurations({
+  windowDataList,
+  client = db,
+}) {
+  const availabilityWindows = [];
+  const allowedDurationsList = [];
+
+  // Validation should convert the client input into Date objects.
+  windowDataList.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+
+  for (const availabilityWindowData of windowDataList) {
+    const {
+      resourceId,
+      startTime,
+      endTime,
+      cancellationNoticeMinutes,
+      allowedDurations,
+    } = availabilityWindowData;
+
+    const availabilityWindow = await createAvailabilityWindow({
+      windowData: { resourceId, startTime, endTime, cancellationNoticeMinutes },
+      client,
+    });
+
+    allowedDurations.sort((a, b) => a - b);
+
+    for (const minutes of allowedDurations) {
+      const allowedDuration = await createAllowedDuration({
+        windowId: availabilityWindow.id,
+        minutes,
+        client,
+      });
+
+      // So that it is clear what window it belongs to.
+      allowedDuration.availabilityWindowId = availabilityWindow.id;
+
+      allowedDurationsList.push(allowedDuration);
+    }
+
+    availabilityWindows.push(availabilityWindow);
+  }
+
+  return {
+    availabilityWindows,
+    allowedDurations: allowedDurationsList,
+  };
+}

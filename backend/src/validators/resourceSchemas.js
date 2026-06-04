@@ -19,7 +19,7 @@ export const listActiveResourcesQuerySchema = Joi.object({
   }),
 }).messages({ 'object.base': 'Query parameters must be an object.' });
 
-export const getActiveResourceByIdParamsSchema = Joi.object({
+export const resourceByIdParamsSchema = Joi.object({
   resourceId: Joi.number().integer().min(1).required().messages({
     'number.base': 'Resource id must be a number.',
     'number.integer': 'Resource id must be an integer.',
@@ -29,3 +29,5 @@ export const getActiveResourceByIdParamsSchema = Joi.object({
 })
   .required()
   .messages({ 'object.base': 'Parameters must be an object.' });
+
+  

@@ -57,3 +57,100 @@ export const getAvailabilityWindowByIdParamsSchema = Joi.object({
 })
   .required()
   .messages({ 'object.base': 'Parameters must be an object.' });
+
+// This function only runs after joi converts the time
+// into a Date object, as getUTCMinutes() and
+// getUTCSeconds() only work on Date objects
+function validateUtcHalfHourBoundary(time, helpers) {
+  const minutes = time.getUTCMinutes();
+  const seconds = time.getUTCSeconds();
+  const milliseconds = time.getUTCMilliseconds();
+
+  if (![0, 30].includes(minutes) || seconds !== 0 || milliseconds !== 0) {
+    return helpers.error('date.utcHalfHourBoundary');
+  }
+
+  return time;
+}
+
+const createAvailabilityWindowSchemaShape = {
+  // .iso() means Joi only accepts date input that is in ISO 8601 date format.
+  // Example: '2026-03-24T09:00:00Z'
+  // .greater('now') means greater than now
+  startTime: Joi.date()
+    .iso()
+    .greater('now')
+    .custom(validateUtcHalfHourBoundary)
+    .required()
+    .messages({
+      'date.base': 'Start time must be a valid date.',
+      'date.format': 'Start time must be an ISO date string.',
+      'date.greater': 'Start time must be in the future.',
+      'date.utcHalfHourBoundary':
+        'Start time must be on a UTC :00 or :30 boundary.',
+      'any.required': 'Start time is required.',
+    }),
+
+  // Joi.ref('startTime') means that it references startTime
+  // endTime > startTime is a must.
+  endTime: Joi.date()
+    .iso()
+    .greater(Joi.ref('startTime'))
+    .custom(validateUtcHalfHourBoundary)
+    .required()
+    .messages({
+      'date.base': 'End time must be a valid date.',
+      'date.format': 'End time must be an ISO date string.',
+      'date.greater': 'End time must be after start time.',
+      'date.utcHalfHourBoundary':
+        'End time must be on a UTC :00 or :30 boundary.',
+      'any.required': 'End time is required.',
+    }),
+
+  cancellationNoticeMinutes: Joi.number().integer().min(0).default(0).messages({
+    'number.base': 'Cancellation notice minutes must be a number.',
+    'number.integer': 'Cancellation notice minutes must be an integer.',
+    'number.min': 'Cancellation notice minutes must be at least 0.',
+  }),
+
+  allowedDurations: Joi.array()
+    .items(
+      Joi.number().integer().min(15).multiple(15).messages({
+        'number.base': 'Allowed duration must be a number.',
+        'number.integer': 'Allowed duration must be an integer.',
+        'number.min': 'Allowed duration must be at least 15 minutes.',
+        'number.multiple': 'Allowed duration must be a 15 minute interval.',
+      }),
+    )
+    .min(1)
+    .unique() // Every item must be a unique number
+    .required()
+    .messages({
+      'array.base': 'Allowed durations must be an array.',
+      'array.min': 'At least one allowed duration is required.',
+      'array.unique': 'Allowed durations cannot contain duplicates.',
+      'any.required': 'Allowed durations are required.',
+    }),
+};
+
+export const createAvailabilityWindowBodySchema = Joi.object({
+  ...createAvailabilityWindowSchemaShape,
+})
+  .required()
+  .messages({
+    'object.base': 'Request body must be an object.',
+  });
+
+export const createAvailabilityWindowsBodySchema = Joi.array()
+  .items(
+    Joi.object({ ...createAvailabilityWindowSchemaShape }).messages({
+      'object.base': 'Each availability window must be an object.',
+    }),
+  )
+  .min(1)
+  .required()
+  .messages({
+    'array.base': 'Availability window data list must be an array.',
+    'array.min': 'At least one availability window is required.',
+    'any.required': 'Availability window data list is required.',
+  });

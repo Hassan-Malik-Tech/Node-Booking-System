@@ -96,3 +96,49 @@ export function expectAvailabilityWindowNotFoundResponse(response) {
     },
   });
 }
+
+export function expectResourceDeletedResponse(response) {
+  expect(response.status).toBe(409);
+  expect(response.body).toEqual({
+    success: false,
+    error: {
+      code: 'RESOURCE_DELETED',
+      message: 'Cannot create availability window for a deleted resource.',
+    },
+  });
+}
+
+export function expectResourceInactiveResponse(response) {
+  expect(response.status).toBe(409);
+  expect(response.body).toEqual({
+    success: false,
+    error: {
+      code: 'RESOURCE_INACTIVE',
+      message: 'Cannot create availability window for an inactive resource.',
+    },
+  });
+}
+
+export function expectAvailabilityWindowConflictResponse(response) {
+  expect(response.status).toBe(409);
+  expect(response.body).toEqual({
+    success: false,
+    error: {
+      code: 'WINDOW_OVERLAP_OR_ADJACENCY',
+      message:
+        'Availability windows for the same resource cannot overlap or touch',
+    },
+  });
+}
+
+export function expectAllowedDurationLongerThanWindowResponse(response) {
+  expect(response.status).toBe(400);
+  expect(response.body).toEqual({
+    success: false,
+    error: {
+      code: 'ALLOWED_DURATION_LONGER_THAN_WINDOW',
+      message:
+        'Allowed duration cannot be longer than the availability window.',
+    },
+  });
+}

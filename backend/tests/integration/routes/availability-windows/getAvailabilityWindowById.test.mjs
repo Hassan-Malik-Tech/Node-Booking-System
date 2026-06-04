@@ -80,7 +80,7 @@ describe('/api/availability-windows', () => {
         expect(response.body.data.deletedAt).toBeNull();
 
         // Expired is endTime <= now
-        // Checks if the parsed(in ms) endTime time string is <= Date.now()
+        // Checks if the parsed(ms) endTime time string is <= Date.now()
         expect(Date.parse(response.body.data.endTime)).toBeLessThanOrEqual(
           Date.now(),
         );

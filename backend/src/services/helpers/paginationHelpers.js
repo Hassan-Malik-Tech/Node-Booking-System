@@ -5,7 +5,7 @@ export function getLimitAndOffset({ page, pageSize }) {
   return { limit, offset };
 }
 
-export function derivePagination({ page, pageSize, total }) {
+export function buildPagination({ page, pageSize, total }) {
   return {
     page,
     pageSize,

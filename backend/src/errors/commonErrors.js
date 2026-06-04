@@ -12,3 +12,25 @@ export function resourceNotFound() {
     code: ERROR_CODES.RESOURCE_NOT_FOUND,
   });
 }
+
+export function forbidden() {
+  return AppError.forbidden('Forbidden.');
+}
+
+export function resourceInactive() {
+  return AppError.conflict(
+    'Cannot create availability window for an inactive resource.',
+    {
+      code: ERROR_CODES.RESOURCE_INACTIVE,
+    },
+  );
+}
+
+export function resourceDeleted() {
+  return AppError.conflict(
+    'Cannot create availability window for a deleted resource.',
+    {
+      code: ERROR_CODES.RESOURCE_DELETED,
+    },
+  );
+}

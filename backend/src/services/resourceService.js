@@ -4,7 +4,7 @@ import ERROR_CODES from '../errors/errorCodes.js';
 import caughtError from '../errors/caughtError.js';
 import {
   getLimitAndOffset,
-  derivePagination,
+  buildPagination,
 } from './helpers/paginationHelpers.js';
 import { resourceNotFound } from '../errors/commonErrors.js';
 
@@ -25,7 +25,7 @@ export async function listActiveResources(queryParams) {
   try {
     const { page, pageSize, search, sortBy, sortDirection } = queryParams;
 
-    const { limit, offset } = getLimitAndOffset({ page, pageSize });
+    const { limit, offset } = getLimitAndOffset({ pageSize, page });
 
     const filters = {
       limit,
@@ -42,7 +42,7 @@ export async function listActiveResources(queryParams) {
 
     return {
       data: resources.map(mapResource),
-      pagination: derivePagination({ page, pageSize, total }),
+      pagination: buildPagination({ page, pageSize, total }),
     };
   } catch (error) {
     throw caughtError(error);
@@ -62,5 +62,17 @@ export async function getActiveResourceById(resourceId) {
     };
   } catch (error) {
     throw caughtError(error);
+  }
+}
+
+export async function createResource({
+  resourceData,
+  availabilityWindowDataList,
+}) {
+  const { ownerId, name, description, capacity, isActive } = resourceData;
+
+  let resource;
+  if (isActive === false) {
+    resource = await resourceQueries.createResource()
   }
 }

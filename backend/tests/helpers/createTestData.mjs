@@ -14,6 +14,10 @@ import {
   generateRandomResourceName,
 } from './generateRandomData.mjs';
 import * as db from '../../src/db/db.js';
+import {
+  softDeleteTestResource,
+  deactivateTestResource,
+} from './updateTestData.mjs';
 
 const testPasswordHash = await hashPassword(TEST_PASSWORD);
 
@@ -64,6 +68,8 @@ export async function createAuthenticatedTestUser({
 
 export async function createTestResource({
   owner = undefined,
+  deleted = false,
+  inactive = false,
   ...overrides
 } = {}) {
   const resourceOwner = owner ?? (await createTestUser());
@@ -73,14 +79,22 @@ export async function createTestResource({
     name: generateRandomResourceName(),
     description: 'Test resource description',
     capacity: 10,
-    isActive: true,
+    isActive: inactive ? false : true,
     ...overrides,
   };
 
-  const resource = await createResource(testResourceData);
+  const resource = await createResource({ resourceData: testResourceData });
+
+  let deletedResource;
+
+  if (deleted) {
+    deletedResource = await softDeleteTestResource(resource.id);
+  }
 
   return {
     ...resource,
+    is_active: inactive ? false : resource.is_active,
+    deleted_at: deleted ? deletedResource.deleted_at : resource.deleted_at,
     owner: resourceOwner,
   };
 }
@@ -103,7 +117,7 @@ export async function createTestAvailabilityWindow({
     ...overrides,
   };
 
-  const window = await createAvailabilityWindow(testWindowData);
+  const window = await createAvailabilityWindow({ windowData: testWindowData });
 
   let allowed_durations;
 

@@ -85,7 +85,28 @@ export async function getActiveResourceById(resourceId) {
   return result.rows[0] ?? null;
 }
 
-export async function createResource(resourceData) {
+export async function getResourceById({ resourceId, client = db }) {
+  const sql = `
+    SELECT 
+      id,
+      owner_id,
+      name,
+      description,
+      capacity,
+      is_active,
+      created_at,
+      updated_at,
+      deleted_at
+    FROM resources
+    WHERE id = $1
+  `;
+
+  const result = await client.query(sql, [resourceId]);
+
+  return result.rows[0] ?? null;
+}
+
+export async function createResource({ resourceData, client = db }) {
   const {
     ownerId,
     name,
@@ -105,10 +126,11 @@ export async function createResource(resourceData) {
       capacity,
       is_active,
       created_at,
-      updated_at
+      updated_at,
+      deleted_at
   `;
 
-  const result = await db.query(sql, [
+  const result = await client.query(sql, [
     ownerId,
     name,
     description,
