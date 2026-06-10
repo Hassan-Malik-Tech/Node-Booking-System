@@ -2,6 +2,7 @@ import { TEST_PASSWORD } from './testConstants.mjs';
 import {
   generateRandomUsername,
   generateRandomEmail,
+  generateRandomResourceName,
 } from './generateRandomData.mjs';
 
 export function buildRegisterRequestBody(overrides = {}) {
@@ -47,4 +48,30 @@ export function buildCreateAvailabilityWindowsBulkRequestBody({
       ...secondWindowOverrides,
     },
   ];
+}
+
+export function buildCreateResourceRequestBody({
+  firstWindowOverrides = {},
+  secondWindowOverrides = {},
+  ...resourceDataOverrides
+} = {}) {
+  const createResourceReqBody = {
+    resourceData: {
+      name: generateRandomResourceName(),
+      description: 'Test resource description',
+      capacity: 10,
+      isActive: true,
+      ...resourceDataOverrides,
+    },
+  };
+
+  if (createResourceReqBody.resourceData.isActive === true) {
+    createResourceReqBody.availabilityWindowDataList =
+      buildCreateAvailabilityWindowsBulkRequestBody({
+        firstWindowOverrides,
+        secondWindowOverrides,
+      });
+  }
+
+  return createResourceReqBody;
 }

@@ -14,8 +14,8 @@
     "prisma:connection": "node src/scripts/prismaConnectionTest.js",
     "db:generate-hash": "node db/dev/generatePasswordHash.mjs",
     "db:rebuild": "psql \"$DATABASE_URL\" -f db/dev/rebuild.sql",
-    "test": "cross-env NODE_ENV=test DOTENV_CONFIG_PATH=.env.test node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "test:watch": "cross-env NODE_ENV=test DOTENV_CONFIG_PATH=.env.test node --experimental-vm-modules node_modules/jest/bin/jest.js --watch"
+    "test": "cross-env NODE_ENV=test DOTENV_CONFIG_PATH=.env.test node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+    "test:watch": "cross-env NODE_ENV=test DOTENV_CONFIG_PATH=.env.test node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --watch"
   },
   "keywords": [],
   "author": "",

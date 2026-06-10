@@ -97,28 +97,6 @@ export function expectAvailabilityWindowNotFoundResponse(response) {
   });
 }
 
-export function expectResourceDeletedResponse(response) {
-  expect(response.status).toBe(409);
-  expect(response.body).toEqual({
-    success: false,
-    error: {
-      code: 'RESOURCE_DELETED',
-      message: 'Cannot create availability window for a deleted resource.',
-    },
-  });
-}
-
-export function expectResourceInactiveResponse(response) {
-  expect(response.status).toBe(409);
-  expect(response.body).toEqual({
-    success: false,
-    error: {
-      code: 'RESOURCE_INACTIVE',
-      message: 'Cannot create availability window for an inactive resource.',
-    },
-  });
-}
-
 export function expectAvailabilityWindowConflictResponse(response) {
   expect(response.status).toBe(409);
   expect(response.body).toEqual({
@@ -139,6 +117,28 @@ export function expectAllowedDurationLongerThanWindowResponse(response) {
       code: 'ALLOWED_DURATION_LONGER_THAN_WINDOW',
       message:
         'Allowed duration cannot be longer than the availability window.',
+    },
+  });
+}
+
+export function expectResourceDeletedResponse({ response, message }) {
+  expect(response.status).toBe(409);
+  expect(response.body).toEqual({
+    success: false,
+    error: {
+      code: 'RESOURCE_DELETED',
+      message,
+    },
+  });
+}
+
+export function expectResourceInactiveResponse({ response, message }) {
+  expect(response.status).toBe(409);
+  expect(response.body).toEqual({
+    success: false,
+    error: {
+      code: 'RESOURCE_INACTIVE',
+      message,
     },
   });
 }

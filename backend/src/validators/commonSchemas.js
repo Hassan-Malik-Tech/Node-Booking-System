@@ -26,6 +26,23 @@ export const commonListFilters = {
     }),
 };
 
+export const resourceIdSchema = Joi.number()
+  .integer()
+  .min(1)
+  .required()
+  .messages({
+    'number.base': 'Resource id must be a number.',
+    'number.integer': 'Resource id must be an integer.',
+    'number.min': 'Resource id must be at least 1.',
+    'any.required': 'Resource id is required.',
+  });
+
+export const resourceOwnerIdSchema = Joi.number().integer().min(1).messages({
+  'number.base': 'Owner id must be a number.',
+  'number.integer': 'Owner id must be an integer.',
+  'number.min': 'Owner id must be at least 1.',
+});
+
 // Preserve username casing for display, but compare usernames case-insensitively.
 export const usernameSchema = Joi.string()
   .trim()
@@ -86,5 +103,3 @@ export function makeNewPasswordSchema() {
     'string.min': `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`,
   });
 }
-
-

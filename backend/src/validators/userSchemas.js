@@ -22,7 +22,7 @@ export const getActiveUserByIdParamsSchema = Joi.object({
 
 export const updateUserBodySchema = Joi.object({
   username: usernameSchema.optional(),
-  name: nameSchema,
+  name: nameSchema.optional(),
   email: emailSchema.optional(),
 })
   .min(1)

@@ -3,11 +3,11 @@ import { getOrderByParts } from './helpers/commonQueryHelpers.js';
 import { buildAvailabilityWindowsWhereClause } from './helpers/availabilityWindowQueryHelpers.js';
 
 const WINDOW_SORT_COLUMNS = {
-  startTime: 'start_time',
-  createdAt: 'created_at',
+  startTime: 'aw.start_time',
+  createdAt: 'aw.created_at',
 };
 
-export async function listActiveWindowsByResourceId(resourceId, filters) {
+export async function listActiveWindowsByResourceId({ resourceId, filters }) {
   const { limit, offset, sortBy, sortDirection } = filters;
 
   const { orderByColumn, direction } = getOrderByParts({
@@ -16,21 +16,37 @@ export async function listActiveWindowsByResourceId(resourceId, filters) {
     allowList: WINDOW_SORT_COLUMNS,
   });
 
-  // filters out soft deleted and expired windows (end_time > NOW())
+  // Active availability windows should always have at least one allowed duration.
+  // The LEFT JOIN and COALESCE are defensive guards in case a bad DB row
+  // somehow exists with zero durations. This keeps the response shape stable
+  // and prevents active windows from not appearing in the list.
   const sql = `
     SELECT
-      id,
-      resource_id,
-      start_time,
-      end_time,
-      cancellation_notice_minutes,
-      created_at,
-      updated_at
-    FROM availability_windows
-    WHERE resource_id = $1
-      AND deleted_at IS NULL
-      AND end_time > NOW()
-    ORDER BY ${orderByColumn} ${direction}, id DESC
+      aw.id,
+      aw.resource_id,
+      aw.start_time,
+      aw.end_time,
+      aw.cancellation_notice_minutes,
+      aw.created_at,
+      aw.updated_at,
+      COALESCE(
+        JSON_AGG(
+          JSON_BUILD_OBJECT(
+            'id', ad.id,
+            'minutes', ad.duration_minutes
+          )
+          ORDER BY ad.duration_minutes ASC
+        ) FILTER (WHERE ad.id IS NOT NULL),
+        '[]'
+    ) AS allowed_durations
+    FROM availability_windows aw
+    LEFT JOIN availability_window_allowed_durations ad
+      ON aw.id = ad.availability_window_id 
+    WHERE aw.resource_id = $1
+      AND aw.deleted_at IS NULL
+      AND aw.end_time > NOW()
+    GROUP BY aw.id
+    ORDER BY ${orderByColumn} ${direction}, aw.id DESC
     LIMIT $2
     OFFSET $3
   `;
@@ -40,11 +56,10 @@ export async function listActiveWindowsByResourceId(resourceId, filters) {
   return result.rows;
 }
 
-export async function countActiveWindowsByResourceId(resourceId) {
+export async function countActiveAvailabilityWindowsByResourceId(resourceId) {
   const sql = `
-    SELECT
-      COUNT(*)::int AS total
-    FROM availability_windows
+    SELECT COUNT(*)::int AS total
+    FROM availability_windows 
     WHERE resource_id = $1
       AND deleted_at IS NULL
       AND end_time > NOW()
@@ -53,6 +68,44 @@ export async function countActiveWindowsByResourceId(resourceId) {
   const result = await db.query(sql, [resourceId]);
 
   return result.rows[0].total;
+}
+
+export async function getActiveAvailabilityWindowByResourceIdAndWindowId({
+  resourceId,
+  windowId,
+}) {
+  const sql = `
+    SELECT
+      aw.id,
+      aw.resource_id,
+      aw.start_time,
+      aw.end_time,
+      aw.cancellation_notice_minutes,
+      aw.created_at,
+      aw.updated_at,
+      COALESCE(
+        JSON_AGG(
+          JSON_BUILD_OBJECT(
+            'id', ad.id,
+            'minutes', ad.duration_minutes
+          )
+          ORDER BY ad.duration_minutes ASC
+        ) FILTER (WHERE ad.id IS NOT NULL),
+        '[]'
+      ) AS allowed_durations
+    FROM availability_windows aw
+    LEFT JOIN availability_window_allowed_durations ad
+      ON aw.id = ad.availability_window_id 
+    WHERE aw.resource_id = $1
+      AND aw.id = $2
+      AND aw.deleted_at IS NULL
+      AND aw.end_time > NOW()
+    GROUP BY aw.id
+  `;
+
+  const result = await db.query(sql, [resourceId, windowId]);
+
+  return result.rows[0] ?? null;
 }
 
 export async function getDurationsByWindowId(windowId) {
@@ -78,6 +131,7 @@ const AVAILABILITY_WINDOW_SORT_COLUMNS = {
   deletedAt: 'aw.deleted_at',
 };
 
+// For staff only route.
 export async function listAvailabilityWindows(filters) {
   const {
     limit,
@@ -204,12 +258,48 @@ export async function softDeleteAvailabilityWindowById(windowId) {
     SET deleted_at = NOW()
     WHERE id = $1
       AND deleted_at IS NULL
+      AND end_time > NOW()
     RETURNING deleted_at
   `;
 
   const result = await db.query(sql, [windowId]);
 
   return result.rows[0] ?? null;
+}
+
+// end_time > NOW() targets current and future windows
+// it leaves alone expiered windows.
+export async function softDeleteAvailabilityWindowsByResourceId({
+  resourceId,
+  client = db,
+}) {
+  const windowSql = `
+    UPDATE availability_windows
+    SET deleted_at = NOW()
+    WHERE resource_id = $1
+      AND deleted_at IS NULL
+      AND end_time > NOW()
+    RETURNING id
+  `;
+
+  const windowResult = await client.query(windowSql, [resourceId]);
+
+  const deletedWindowIds = windowResult.rows.map((row) => row.id);
+
+  // With ANY($1), the $1 placeholder is
+  // the whole array (instead of just one value),
+  // it uses the whole array of ids in the
+  // WHERE conditions.
+  if (deletedWindowIds.length > 0) {
+    const durationsSql = `
+      DELETE FROM availability_window_allowed_durations
+      WHERE availability_window_id = ANY($1)
+    `;
+
+    await client.query(durationsSql, [deletedWindowIds]);
+  }
+
+  return deletedWindowIds.length;
 }
 
 // For admin/employee route

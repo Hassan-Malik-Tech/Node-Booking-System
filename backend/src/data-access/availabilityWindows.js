@@ -3,6 +3,15 @@ import * as sqlAvailabilityWindowQueries from './sql/availabilityWindowQueries.j
 export const listAvailabilityWindows =
   sqlAvailabilityWindowQueries.listAvailabilityWindows;
 
+export const listActiveWindowsByResourceId =
+  sqlAvailabilityWindowQueries.listActiveWindowsByResourceId;
+
+export const countActiveAvailabilityWindowsByResourceId =
+  sqlAvailabilityWindowQueries.countActiveAvailabilityWindowsByResourceId;
+
+export const getActiveAvailabilityWindowByResourceIdAndWindowId =
+  sqlAvailabilityWindowQueries.getActiveAvailabilityWindowByResourceIdAndWindowId;
+
 export const countAvailabilityWindows =
   sqlAvailabilityWindowQueries.countAvailabilityWindows;
 
@@ -23,3 +32,6 @@ export const createAllowedDurations =
 
 export const createAvailabilityWindowsWithDurations =
   sqlAvailabilityWindowQueries.createAvailabilityWindowsWithDurations;
+
+export const softDeleteAvailabilityWindowsByResourceId =
+  sqlAvailabilityWindowQueries.softDeleteAvailabilityWindowsByResourceId;

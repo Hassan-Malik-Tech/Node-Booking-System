@@ -27,7 +27,7 @@ export async function updateProfile(req, res) {
 }
 
 export async function updatePassword(req, res) {
-  const userId = req.user.id;
+  const userId = req.auth.userId;
   const newPassword = req.validated.body.password;
 
   await meService.updatePassword({ userId, newPassword });

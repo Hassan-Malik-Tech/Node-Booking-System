@@ -39,7 +39,7 @@ END;
 $$;
 
 ----------------------------------------------------------------
--- Irreversible soft-delete/reservation cancellation functions
+-- Irreversible soft-delete/reservation/ cancellation functions
 ----------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION irreversible_soft_delete()
@@ -82,9 +82,9 @@ END;
 $$;
 
 
-----------------------------------------------------------------
--- Block child writes against soft-deleted parents functions
-----------------------------------------------------------------
+-------------------------------------------------------------------------
+-- Block child writes against soft-deleted/inactive parents functions
+-------------------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION no_reservations_for_inactive_or_deleted_resource()
 RETURNS trigger

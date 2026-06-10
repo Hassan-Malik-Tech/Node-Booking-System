@@ -10,6 +10,7 @@ import * as db from '../db/db.js';
 import * as resourceRules from './rules/resourceRules.js';
 import * as availabilityWindowRules from './rules/availabilityWindowRules.js';
 import { createAvailabilityWindowsForResource } from './helpers/availabilityWindowHelpers.js';
+import { availabilityWindowNotFound } from '../errors/commonErrors.js';
 
 function mapAvailabilityWindow(window) {
   return {
@@ -38,6 +39,7 @@ function publicAvailabilityWindowMapper({ window, allowedDurations }) {
   };
 }
 
+// For staff only list end point.
 export async function listAvailabilityWindows(queryParams) {
   try {
     const {
@@ -68,7 +70,7 @@ export async function listAvailabilityWindows(queryParams) {
     ]);
 
     return {
-      data: availabilityWindows.map(mapAvailabilityWindow),
+      data: availabilityWindows.map((window) => mapAvailabilityWindow(window)),
       pagination: buildPagination({ page, pageSize, total }),
     };
   } catch (error) {
@@ -82,13 +84,78 @@ export async function getAvailabilityWindowById(windowId) {
       await availabilityWindowQueries.getAvailabilityWindowById(windowId);
 
     if (!availabilityWindow) {
-      throw AppError.notFound('Availability window not found.', {
-        code: ERROR_CODES.AVAILABILITY_WINDOW_NOT_FOUND,
-      });
+      throw availabilityWindowNotFound();
     }
 
     return {
       data: mapAvailabilityWindow(availabilityWindow),
+    };
+  } catch (error) {
+    throw caughtError(error);
+  }
+}
+
+// For public list end point.
+export async function listActiveAvailabilityWindowsByResourceId({
+  resourceId,
+  queryParams,
+}) {
+  try {
+    await resourceRules.requirePublicResource({ resourceId });
+
+    const { page, pageSize, sortBy, sortDirection } = queryParams;
+
+    const { limit, offset } = getLimitAndOffset({ pageSize, page });
+
+    const filters = {
+      limit,
+      offset,
+      sortBy,
+      sortDirection,
+    };
+
+    const [availabilityWindows, total] = await Promise.all([
+      availabilityWindowQueries.listActiveWindowsByResourceId({
+        resourceId,
+        filters,
+      }),
+      availabilityWindowQueries.countActiveAvailabilityWindowsByResourceId(
+        resourceId,
+      ),
+    ]);
+
+    return {
+      data: availabilityWindows.map((window) =>
+        publicAvailabilityWindowMapper({ window }),
+      ),
+      pagination: buildPagination({ page, pageSize, total }),
+    };
+  } catch (error) {
+    throw caughtError(error);
+  }
+}
+
+export async function getActiveAvailabilityWindowByResourceIdAndWindowId({
+  resourceId,
+  windowId,
+}) {
+  try {
+    await resourceRules.requirePublicResource({ resourceId });
+
+    const availabilityWindow =
+      await availabilityWindowQueries.getActiveAvailabilityWindowByResourceIdAndWindowId(
+        {
+          resourceId,
+          windowId,
+        },
+      );
+
+    if (!availabilityWindow) {
+      throw availabilityWindowNotFound();
+    }
+
+    return {
+      data: publicAvailabilityWindowMapper({ window: availabilityWindow }),
     };
   } catch (error) {
     throw caughtError(error);
@@ -118,9 +185,28 @@ export async function createAvailabilityWindow({
     const { startTime, endTime, cancellationNoticeMinutes, allowedDurations } =
       availabilityWindowData;
 
+    // A normal SELECT does not wait for another request's FOR UPDATE lock.
+    // If create-window reads the resource without FOR UPDATE, it can see the
+    // last committed active = true value and insert a window while deactivate
+    // is still running.
+    // With FOR UPDATE, create-window waits for deactivate to commit, then reads
+    // the latest resource state and rejects if the resource is now inactive.
+
+    // So with FOR UPDATE, SELECT waits for the row if it is already locked
+    // (or locks it if not locked). Without FOR UPDATE, SELECT does not wait
+    // and reads the current state even while it is being updated.
+
+    // I already have a trigger which blocks writes to inactie resources.
+    // The forUpdate here is for consistent responses, the trigger is a
+    // back up just incase I forget in the service.
     await resourceRules.requireOwnedActiveResource({
       resourceId,
       authUserId,
+      deletedMessage:
+        'Cannot create availability window for a deleted resource.',
+      inactiveMessage:
+        'Cannot create availability window for an inactive resource.',
+      forUpdate: true,
       client,
     });
 
@@ -196,6 +282,11 @@ export async function createAvailabilityWindowsInBulk({
     await resourceRules.requireOwnedActiveResource({
       resourceId,
       authUserId,
+      deletedMessage:
+        'Cannot create availability window for a deleted resource.',
+      inactiveMessage:
+        'Cannot create availability window for an inactive resource.',
+      forUpdate: true,
       client,
     });
 

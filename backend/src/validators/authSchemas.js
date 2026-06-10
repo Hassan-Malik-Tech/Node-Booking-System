@@ -10,7 +10,7 @@ import {
 const registrationSchema = Joi.object({
   username: usernameSchema.required(),
   email: emailSchema.required(),
-  name: nameSchema,
+  name: nameSchema.optional(),
   password: makeNewPasswordSchema(),
 }).messages({
   'object.base': 'Request body must be an object.',
@@ -18,7 +18,7 @@ const registrationSchema = Joi.object({
 
 const loginSchema = Joi.object({
   username: usernameSchema.required(),
-  password: passwordSchema,
+  password: passwordSchema.required(),
 }).messages({
   'object.base': 'Request body must be an object.',
 });

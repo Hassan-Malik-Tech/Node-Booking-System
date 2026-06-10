@@ -76,8 +76,8 @@ CREATE TABLE resources (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   deleted_at TIMESTAMPTZ, -- make it so that a soft deleted resource cannot be un-deleted (backend logic in step 5)
 
-  CONSTRAINT resources_valid_name_check
-    CHECK (length(trim(name)) > 0), -- prevents the name from being empty string
+  CONSTRAINT resources_valid_name_length_check
+    CHECK (length(trim(name)) BETWEEN 1 AND 100), 
 
   CONSTRAINT resources_name_must_be_trimmed_check
     CHECK (name = trim(name)), -- prevents something like " name "

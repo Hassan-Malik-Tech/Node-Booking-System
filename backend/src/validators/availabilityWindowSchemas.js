@@ -1,5 +1,9 @@
 import Joi from 'joi';
-import { commonListFilters } from './commonSchemas.js';
+import {
+  commonListFilters,
+  resourceIdSchema,
+  resourceOwnerIdSchema,
+} from './commonSchemas.js';
 
 export const listAvailabilityWindowsQuerySchema = Joi.object({
   ...commonListFilters,
@@ -40,23 +44,57 @@ export const listAvailabilityWindowsQuerySchema = Joi.object({
     'number.min': 'Resource id must be at least 1.',
   }),
 
-  ownerId: Joi.number().integer().min(1).messages({
-    'number.base': 'Owner id must be a number.',
-    'number.integer': 'Owner id must be an integer.',
-    'number.min': 'Owner id must be at least 1.',
-  }),
+  ownerId: resourceOwnerIdSchema,
 }).messages({ 'object.base': 'Query parameters must be an object.' });
 
-export const getAvailabilityWindowByIdParamsSchema = Joi.object({
-  availabilityWindowId: Joi.number().integer().min(1).required().messages({
+export const listActiveAvailabilityWindowsByResourceIdQuerySchema = Joi.object({
+  ...commonListFilters,
+
+  sortDirection: Joi.string()
+    .trim()
+    .valid('asc', 'desc')
+    .default('asc')
+    .messages({
+      'string.base': 'Sort direction must be a string.',
+      'any.only': 'Sort direction must be either asc or desc.',
+    }),
+
+  sortBy: Joi.string()
+    .trim()
+    .valid('startTime', 'createdAt')
+    .default('startTime')
+    .messages({
+      'string.base': 'Sort by must be a string.',
+      'any.only': 'Sort by must be either startTime or createdAt.',
+    }),
+}).messages({
+  'object.base': 'Query parameters must be an object.',
+});
+
+export const availabilityWindowIdSchema = Joi.number()
+  .integer()
+  .min(1)
+  .required()
+  .messages({
     'number.base': 'Availability window id must be a number.',
     'number.integer': 'Availability window id must be an integer.',
     'number.min': 'Availability window id must be at least 1.',
     'any.required': 'Availability window id is required.',
-  }),
+  });
+
+export const getAvailabilityWindowByIdParamsSchema = Joi.object({
+  availabilityWindowId: availabilityWindowIdSchema.required(),
 })
   .required()
   .messages({ 'object.base': 'Parameters must be an object.' });
+
+export const getActiveAvailabilityWindowByResourceIdAndWindowIdParamsSchema =
+  Joi.object({
+    resourceId: resourceIdSchema.required(),
+    availabilityWindowId: availabilityWindowIdSchema.required(),
+  })
+    .required()
+    .messages({ 'object.base': 'Parameters must be an object.' });
 
 // This function only runs after joi converts the time
 // into a Date object, as getUTCMinutes() and

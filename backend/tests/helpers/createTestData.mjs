@@ -18,6 +18,7 @@ import {
   softDeleteTestResource,
   deactivateTestResource,
 } from './updateTestData.mjs';
+import { createReservation } from '../../src/data-access/reservations.js';
 
 const testPasswordHash = await hashPassword(TEST_PASSWORD);
 
@@ -104,13 +105,19 @@ export async function createTestAvailabilityWindow({
   deleted = false,
   expired = false,
   noDurations = false,
+  resource = undefined,
   resourceOwner = undefined,
   ...overrides
 } = {}) {
-  const resource = await createTestResource({ owner: resourceOwner });
+  if (resource !== undefined && resourceOwner !== undefined) {
+    throw new Error('resource and resourceOwner cannot both be defined.');
+  }
+
+  const testResource =
+    resource ?? (await createTestResource({ owner: resourceOwner }));
 
   const testWindowData = {
-    resourceId: resource.id,
+    resourceId: testResource.id,
     startTime: expired ? '2025-01-01T09:00:00Z' : '2036-01-01T09:00:00Z',
     endTime: expired ? '2025-01-01T17:00:00Z' : '2036-01-01T17:00:00Z',
     cancellationNoticeMinutes: 120,
@@ -138,6 +145,37 @@ export async function createTestAvailabilityWindow({
     ...window,
     allowed_durations: noDurations ? [] : allowed_durations,
     deleted_at: deleted ? deletedWindow.deleted_at : window.deleted_at,
+    resource: testResource,
+  };
+}
+
+export async function createTestReservation({
+  user,
+  resource,
+  availabilityWindow = undefined,
+  ...overrides
+}) {
+  const testWindow =
+    availabilityWindow ?? (await createTestAvailabilityWindow({ resource }));
+
+  const testReservationData = {
+    resourceId: resource.id,
+    availabilityWindowId: testWindow.id,
+    startTime: '2036-01-01T09:00:00Z',
+    endTime: '2036-01-01T09:30:00Z',
+    partySize: resource.capacity,
+    ...overrides,
+  };
+
+  const reservation = await createReservation({
+    userId: user.id,
+    reservationData: testReservationData,
+  });
+
+  return {
+    ...reservation,
+    user,
     resource,
+    availabilityWindow: testWindow,
   };
 }

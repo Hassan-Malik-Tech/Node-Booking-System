@@ -17,20 +17,32 @@ export function forbidden() {
   return AppError.forbidden('Forbidden.');
 }
 
-export function resourceInactive() {
+export function resourceInactive(message) {
   return AppError.conflict(
-    'Cannot create availability window for an inactive resource.',
+    message ?? 'Cannot perform this action on an inactive resource.',
     {
       code: ERROR_CODES.RESOURCE_INACTIVE,
     },
   );
 }
 
-export function resourceDeleted() {
+export function resourceDeleted(message) {
   return AppError.conflict(
-    'Cannot create availability window for a deleted resource.',
+    message ?? 'Cannot perform this action on a deleted resource.',
     {
       code: ERROR_CODES.RESOURCE_DELETED,
     },
   );
+}
+
+export function resourceStateChanged() {
+  return AppError.conflict('Resource state changed during request.', {
+    code: ERROR_CODES.RESOURCE_STATE_CHANGED,
+  });
+}
+
+export function availabilityWindowNotFound() {
+  return AppError.notFound('Availability window not found.', {
+    code: ERROR_CODES.AVAILABILITY_WINDOW_NOT_FOUND,
+  });
 }

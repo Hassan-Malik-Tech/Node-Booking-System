@@ -12,10 +12,7 @@ const JWT_ALGORITHM = 'HS256';
 export function signAccessToken(user) {
   return (
     new SignJWT({
-      // role is custom, you can put custom keys in here
-      // can technically put sub or iat or exp etc in here as well
-      // but jose build in methods are prefered
-      role: user.role,
+      // custom
       tokenVersion: user.token_version,
     })
       .setProtectedHeader({ alg: JWT_ALGORITHM })
@@ -29,24 +26,20 @@ export function signAccessToken(user) {
 
 export async function verifyAccessToken(token) {
   try {
-    // The payload returned is the payload with sub, role, iat and exp
+    // The payload returned is the payload with sub, tokenVersion, iat and exp
     const { payload } = await jwtVerify(token, jwtSecret, {
       algorithms: [JWT_ALGORITHM],
     });
 
     return payload;
   } catch (error) {
-    throw AppError.unauthorized('Invalid or expired token.', {
-      code: ERROR_CODES.INVALID_TOKEN,
-      cause: error,
-    });
+    throw invalidTokenError();
   }
 }
 
 // jwtVerify verifies the token signature, expiration, and JWT-level validity.
 // These checks validate the app-specific payload shape before trusting it as req.auth.
 // This is defensive in case the token format changes, old tokens exist, or a signing bug creates invalid claims.
-const VALID_ROLES = new Set(['user', 'employee', 'admin']);
 
 export function buildAuthContext(payload) {
   const userId = Number(payload.sub);
@@ -60,14 +53,9 @@ export function buildAuthContext(payload) {
     throw invalidTokenError();
   }
 
-  if (!VALID_ROLES.has(payload.role)) {
-    throw invalidTokenError();
-  }
-
   // used for req.auth
   return {
     userId,
-    role: payload.role,
     tokenVersion,
   };
 }

@@ -143,7 +143,11 @@ describe('/api/resources', () => {
             .set('Authorization', `Bearer ${accessToken}`)
             .send(buildCreateAvailabilityWindowRequestBody());
 
-          expectResourceDeletedResponse(response);
+          expectResourceDeletedResponse({
+            response,
+            message:
+              'Cannot create availability window for a deleted resource.',
+          });
         });
       });
 
@@ -162,7 +166,11 @@ describe('/api/resources', () => {
             .set('Authorization', `Bearer ${accessToken}`)
             .send(buildCreateAvailabilityWindowRequestBody());
 
-          expectResourceInactiveResponse(response);
+          expectResourceInactiveResponse({
+            response,
+            message:
+              'Cannot create availability window for an inactive resource.',
+          });
         });
       });
 

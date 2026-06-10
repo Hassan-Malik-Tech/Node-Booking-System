@@ -21,9 +21,36 @@ export async function getAvailabilityWindowById(req, res) {
   return res.status(200).json(success({ data }));
 }
 
+export async function listActiveAvailabilityWindowsByResourceId(req, res) {
+  const resourceId = req.validated.params.resourceId;
+  const queryParams = req.validated.query;
+
+  const { data, pagination } =
+    await availabilityWindowService.listActiveAvailabilityWindowsByResourceId({
+      resourceId,
+      queryParams,
+    });
+
+  return res.status(200).json(success({ data, pagination }));
+}
+
+export async function getActiveAvailabilityWindowByResourceIdAndWindowId(
+  req,
+  res,
+) {
+  const { resourceId, availabilityWindowId: windowId } = req.validated.params;
+
+  const { data } =
+    await availabilityWindowService.getActiveAvailabilityWindowByResourceIdAndWindowId(
+      { resourceId, windowId },
+    );
+
+  return res.status(200).json(success({ data }));
+}
+
 export async function createAvailabilityWindow(req, res) {
   const resourceId = req.validated.params.resourceId;
-  const authUserId = req.auth.userId;
+  const authUserId = req.user.id;
   const availabilityWindowData = req.validated.body;
 
   const { data } = await availabilityWindowService.createAvailabilityWindow({
@@ -39,7 +66,7 @@ export async function createAvailabilityWindow(req, res) {
 
 export async function createAvailabilityWindowsInBulk(req, res) {
   const resourceId = req.validated.params.resourceId;
-  const authUserId = req.auth.userId;
+  const authUserId = req.user.id;
   const availabilityWindowDataList = req.validated.body;
 
   const { data } =

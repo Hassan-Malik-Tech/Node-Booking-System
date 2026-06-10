@@ -39,7 +39,6 @@ describe('/api/resources', () => {
             name: resource.name,
             description: resource.description,
             capacity: resource.capacity,
-            isActive: resource.is_active,
             createdAt: resource.created_at.toISOString(),
             updatedAt: resource.updated_at.toISOString(),
           },
@@ -69,7 +68,7 @@ describe('/api/resources', () => {
         test('when resource is soft deleted', async () => {
           const resource = await createTestResource();
 
-          await softDeleteResourceById(resource.id);
+          await softDeleteResourceById({ resourceId: resource.id });
 
           const response = await request(app).get(
             `/api/resources/${resource.id}`,

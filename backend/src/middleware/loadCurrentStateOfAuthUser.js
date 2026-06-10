@@ -10,8 +10,8 @@ async function loadCurrentStateOfAuthUser(req, res, next) {
     }
 
     const userId = req.auth.userId;
-    // Check to see if the token user is still active,
-    // and to get the latest role (if it changed) since aquring the token initially.
+    // Check that the token user is still active,
+    // and load the latest user state from the database.
     const currentUserState = await getActiveUserById(userId);
 
     if (!currentUserState) {
@@ -25,11 +25,6 @@ async function loadCurrentStateOfAuthUser(req, res, next) {
     }
 
     req.user = currentUserState;
-
-    req.auth = {
-      userId,
-      role: currentUserState.role,
-    };
 
     return next();
   } catch (error) {

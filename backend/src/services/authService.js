@@ -65,6 +65,7 @@ export async function loginUser(userData) {
     const { username, password } = userData;
     const INVALID_CREDENTIALS_MESSAGE = 'Invalid username or password.';
 
+    // Checks if the username belongs to an active user, deleted users cannot login.
     const foundUser = await userQueries.getActiveUserByUsername(username);
 
     if (!foundUser) {

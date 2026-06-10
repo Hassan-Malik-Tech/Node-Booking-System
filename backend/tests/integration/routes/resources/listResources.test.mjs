@@ -51,7 +51,6 @@ describe('/api/resources', () => {
               name: r1.name,
               description: r1.description,
               capacity: r1.capacity,
-              isActive: r1.is_active,
               createdAt: r1.created_at.toISOString(),
               updatedAt: r1.updated_at.toISOString(),
             },
@@ -61,7 +60,6 @@ describe('/api/resources', () => {
               name: r2.name,
               description: r2.description,
               capacity: r2.capacity,
-              isActive: r2.is_active,
               createdAt: r2.created_at.toISOString(),
               updatedAt: r2.updated_at.toISOString(),
             },
@@ -228,7 +226,7 @@ describe('/api/resources', () => {
           createTestResource({ isActive: false }),
         ]);
 
-        await softDeleteResourceById(resourceToDelete.id);
+        await softDeleteResourceById({ resourceId: resourceToDelete.id });
 
         const response = await request(app).get('/api/resources');
 
