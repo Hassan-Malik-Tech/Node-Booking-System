@@ -159,7 +159,7 @@ describe('/api/resources', () => {
 
           const deletedUser = await softDeleteTestUser(user.id);
 
-          expect(deletedUser.deleted_at).toBeDefined();
+          expect(deletedUser.deleted_at).toEqual(expect.any(Date));
 
           const response = await request(app)
             .patch(`/api/resources/${inactiveResource.id}/activate`)
@@ -234,7 +234,7 @@ describe('/api/resources', () => {
             deleted: true,
           });
 
-          expect(deletedResource.deleted_at).toBeDefined();
+          expect(deletedResource.deleted_at).toEqual(expect.any(Date));
 
           const response = await request(app)
             .patch(`/api/resources/${deletedResource.id}/activate`)

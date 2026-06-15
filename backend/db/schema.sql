@@ -220,7 +220,7 @@ CREATE TABLE availability_window_allowed_durations (
   CONSTRAINT awad_15_min_interval_check
     CHECK (duration_minutes % 15 = 0), -- enforce with joi as well
 
-  CONSTRAINT unique_window_duration_per_window
+  CONSTRAINT unique_duration_per_window
     UNIQUE(availability_window_id, duration_minutes)
 );
 -- in the backend enforce that a reservation must fall in one of the availability windows plus one of the allowed durrations

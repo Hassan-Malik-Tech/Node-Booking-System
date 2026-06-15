@@ -59,9 +59,10 @@ export async function createAvailabilityWindow(req, res) {
     availabilityWindowData,
   });
 
-  // Add location header to /api/resources/:resourceId/availability-windows/:availabilityWindowId
-  // once it is added
-  return res.status(201).json(success({ data }));
+  return res
+    .status(201)
+    .location(`/api/resources/${resourceId}/availability-windows/${data.id}`)
+    .json(success({ data }));
 }
 
 export async function createAvailabilityWindowsInBulk(req, res) {
@@ -77,4 +78,59 @@ export async function createAvailabilityWindowsInBulk(req, res) {
     });
 
   return res.status(201).json(success({ data }));
+}
+
+export async function updateFutureAvailabilityWindow(req, res) {
+  const windowId = req.validated.params.availabilityWindowId;
+  const authUserId = req.user.id;
+  const updateData = req.validated.body;
+
+  const { data } =
+    await availabilityWindowService.updateFutureAvailabilityWindow({
+      windowId,
+      authUserId,
+      updateData,
+    });
+
+  return res.status(200).json(success({ data }));
+}
+
+export async function softDeleteAvailabilityWindow(req, res) {
+  const windowId = req.validated.params.availabilityWindowId;
+  const authUserId = req.user.id;
+  const userRole = req.user.role;
+
+  const { data } = await availabilityWindowService.softDeleteAvailabilityWindow(
+    { windowId, authUserId, userRole },
+  );
+
+  return res.status(200).json(success({ data }));
+}
+
+export async function createAllowedDurations(req, res) {
+  const windowId = req.validated.params.availabilityWindowId;
+  const authUserId = req.user.id;
+  const allowedDurations = req.validated.body;
+
+  const { data } = await availabilityWindowService.createAllowedDurations({
+    windowId,
+    authUserId,
+    allowedDurations,
+  });
+
+  return res.status(201).json(success({ data }));
+}
+
+export async function deleteAllowedDuration(req, res) {
+  const windowId = req.validated.params.availabilityWindowId;
+  const durationId = req.validated.params.allowedDurationId;
+  const authUserId = req.user.id;
+
+  const { data } = await availabilityWindowService.deleteAllowedDuration({
+    windowId,
+    durationId,
+    authUserId,
+  });
+
+  return res.status(200).json(success({ data }));
 }

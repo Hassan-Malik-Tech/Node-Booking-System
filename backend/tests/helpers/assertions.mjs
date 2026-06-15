@@ -142,3 +142,14 @@ export function expectResourceInactiveResponse({ response, message }) {
     },
   });
 }
+
+export function expectNotAFutureAvailabilityWindowResponse({ response, message }) {
+  expect(response.status).toBe(409);
+  expect(response.body).toEqual({
+    success: false,
+    error: {
+      code: 'NOT_A_FUTURE_AVAILABILITY_WINDOW',
+      message,
+    },
+  });
+}

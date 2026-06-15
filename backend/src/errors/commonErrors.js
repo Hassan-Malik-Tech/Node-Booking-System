@@ -46,3 +46,12 @@ export function availabilityWindowNotFound() {
     code: ERROR_CODES.AVAILABILITY_WINDOW_NOT_FOUND,
   });
 }
+
+export function availabilityWindowStateChanged() {
+  return AppError.conflict(
+    'Availability window state changed during request.',
+    {
+      code: ERROR_CODES.AVAILABILITY_WINDOW_STATE_CHANGED,
+    },
+  );
+}

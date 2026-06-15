@@ -6,4 +6,16 @@ export const cancelUpcomingReservationsOverCapacity =
 export const cancelUpcomingReservationsByResourceId =
   sqlReservationQueries.cancelUpcomingReservationsByResourceId;
 
+export const cancelUpcomingReservationsOutsideAvailabilityWindow =
+  sqlReservationQueries.cancelUpcomingReservationsOutsideAvailabilityWindow;
+
+export const cancelUpcomingReservationsByAvailabilityWindowId =
+  sqlReservationQueries.cancelUpcomingReservationsByAvailabilityWindowId;
+
 export const createReservation = sqlReservationQueries.createReservation;
+
+export const cancelReservationById =
+  sqlReservationQueries.cancelReservationById;
+
+export const getFutureActiveReservationsByWindowId =
+  sqlReservationQueries.getFutureActiveReservationsByWindowId;

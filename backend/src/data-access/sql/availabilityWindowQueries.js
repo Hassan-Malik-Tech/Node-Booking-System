@@ -1,5 +1,8 @@
 import * as db from '../../db/db.js';
-import { getOrderByParts } from './helpers/commonQueryHelpers.js';
+import {
+  getOrderByParts,
+  buildSetClause,
+} from './helpers/commonQueryHelpers.js';
 import { buildAvailabilityWindowsWhereClause } from './helpers/availabilityWindowQueryHelpers.js';
 
 const WINDOW_SORT_COLUMNS = {
@@ -252,8 +255,11 @@ export async function createAvailabilityWindow({ windowData, client = db }) {
   return result.rows[0];
 }
 
-export async function softDeleteAvailabilityWindowById(windowId) {
-  const sql = `
+export async function softDeleteAvailabilityWindowById({
+  windowId,
+  client = db,
+}) {
+  const windowSql = `
     UPDATE availability_windows
     SET deleted_at = NOW()
     WHERE id = $1
@@ -262,9 +268,23 @@ export async function softDeleteAvailabilityWindowById(windowId) {
     RETURNING deleted_at
   `;
 
-  const result = await db.query(sql, [windowId]);
+  const result = await client.query(windowSql, [windowId]);
 
-  return result.rows[0] ?? null;
+  // So that durationsSql does not run when the window
+  // does not exist.
+  if (result.rowCount === 0) {
+    return null;
+  }
+
+  const durationsSql = `
+    DELETE FROM availability_window_allowed_durations
+    WHERE availability_window_id = $1
+  `;
+
+  await client.query(durationsSql, [windowId]);
+
+  // Dont need to return null here as zero row handling was done above.
+  return result.rows[0];
 }
 
 // end_time > NOW() targets current and future windows
@@ -286,14 +306,13 @@ export async function softDeleteAvailabilityWindowsByResourceId({
 
   const deletedWindowIds = windowResult.rows.map((row) => row.id);
 
-  // With ANY($1), the $1 placeholder is
-  // the whole array (instead of just one value),
-  // it uses the whole array of ids in the
-  // WHERE conditions.
+  // WHERE availability_window_id = ANY($1::int[])
+  // means:
+  // WHERE availability_window_id is equal to any integer inside this array
   if (deletedWindowIds.length > 0) {
     const durationsSql = `
       DELETE FROM availability_window_allowed_durations
-      WHERE availability_window_id = ANY($1)
+      WHERE availability_window_id = ANY($1::int[])
     `;
 
     await client.query(durationsSql, [deletedWindowIds]);
@@ -303,7 +322,25 @@ export async function softDeleteAvailabilityWindowsByResourceId({
 }
 
 // For admin/employee route
-export async function getAvailabilityWindowById(windowId) {
+export async function getAvailabilityWindowById({
+  windowId,
+  includeDeleted = false,
+  forUpdate = false,
+  client = db,
+}) {
+  if (forUpdate === true) {
+    await client.query(
+      `
+    SELECT id
+    FROM availability_windows
+    WHERE id = $1
+    ${includeDeleted ? '' : 'AND deleted_at IS NULL'}
+    FOR UPDATE
+  `,
+      [windowId],
+    );
+  }
+
   const sql = `
      SELECT
        aw.id,
@@ -328,10 +365,95 @@ export async function getAvailabilityWindowById(windowId) {
     LEFT JOIN availability_window_allowed_durations ad
       ON aw.id = ad.availability_window_id
     WHERE aw.id = $1
+    ${includeDeleted ? '' : 'AND aw.deleted_at IS NULL'}
     GROUP BY aw.id
   `;
 
-  const result = await db.query(sql, [windowId]);
+  const result = await client.query(sql, [windowId]);
+
+  return result.rows[0] ?? null;
+}
+
+export async function updateFutureAvailabilityWindow({
+  windowId,
+  updateData,
+  client = db,
+}) {
+  const {
+    startTime: start_time,
+    endTime: end_time,
+    cancellationNoticeMinutes: cancellation_notice_minutes,
+  } = updateData;
+
+  const { values, setClause } = buildSetClause({
+    start_time,
+    end_time,
+    cancellation_notice_minutes,
+  });
+
+  if (setClause.length === 0) {
+    return null;
+  }
+
+  values.push(windowId);
+  const windowIdPlaceholder = `$${values.length}`;
+
+  const sql = `
+    UPDATE availability_windows
+    SET ${setClause}
+    WHERE id = ${windowIdPlaceholder}
+      AND deleted_at IS NULL
+      AND start_time > NOW()
+    RETURNING
+      id,
+      resource_id,
+      start_time,
+      end_time,
+      cancellation_notice_minutes,
+      created_at,
+      updated_at
+  `;
+
+  const result = await client.query(sql, values);
+
+  return result.rows[0] ?? null;
+}
+
+export async function deleteAllowedDurationByDurationIdAndWindowId({
+  durationId,
+  windowId,
+  client = db,
+}) {
+  const sql = `
+    DELETE FROM availability_window_allowed_durations
+    WHERE id = $1
+      AND availability_window_id = $2
+    RETURNING id
+  `;
+
+  const result = await client.query(sql, [durationId, windowId]);
+
+  return result.rows[0] ?? null;
+}
+
+export async function getAllowedDurationByDurationIdAndWindowId({
+  durationId,
+  windowId,
+  forUpdate = false,
+  client = db,
+}) {
+  const sql = `
+    SELECT
+      id,
+      availability_window_id,
+      duration_minutes
+    FROM availability_window_allowed_durations
+    WHERE id = $1
+      AND availability_window_id = $2
+    ${forUpdate ? 'FOR UPDATE' : ''}
+  `;
+
+  const result = await client.query(sql, [durationId, windowId]);
 
   return result.rows[0] ?? null;
 }
@@ -407,51 +529,3 @@ returns:
 
 This is the same format as my availability windows list function for JSON_AGG, so It can be used for tests without remapping.
 */
-
-export async function createAvailabilityWindowsWithDurations({
-  windowDataList,
-  client = db,
-}) {
-  const availabilityWindows = [];
-  const allowedDurationsList = [];
-
-  // Validation should convert the client input into Date objects.
-  windowDataList.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
-
-  for (const availabilityWindowData of windowDataList) {
-    const {
-      resourceId,
-      startTime,
-      endTime,
-      cancellationNoticeMinutes,
-      allowedDurations,
-    } = availabilityWindowData;
-
-    const availabilityWindow = await createAvailabilityWindow({
-      windowData: { resourceId, startTime, endTime, cancellationNoticeMinutes },
-      client,
-    });
-
-    allowedDurations.sort((a, b) => a - b);
-
-    for (const minutes of allowedDurations) {
-      const allowedDuration = await createAllowedDuration({
-        windowId: availabilityWindow.id,
-        minutes,
-        client,
-      });
-
-      // So that it is clear what window it belongs to.
-      allowedDuration.availabilityWindowId = availabilityWindow.id;
-
-      allowedDurationsList.push(allowedDuration);
-    }
-
-    availabilityWindows.push(availabilityWindow);
-  }
-
-  return {
-    availabilityWindows,
-    allowedDurations: allowedDurationsList,
-  };
-}

@@ -43,11 +43,11 @@ function translatePgError(error) {
       );
     }
 
-    if (error.constraint === 'unique_window_duration_per_window') {
+    if (error.constraint === 'unique_duration_per_window') {
       return AppError.conflict(
-        'Duration already exists for this availability window',
+        'Allowed duration already exists for this availability window.',
         {
-          code: 'DURATION_ALREADY_EXISTS_FOR_WINDOW',
+          code: 'ALLOWED_DURATION_ALREADY_EXISTS',
           cause: error,
         },
       );
@@ -196,13 +196,10 @@ function translatePgError(error) {
     }
 
     if (error.constraint === 'valid_availability_window_check') {
-      return AppError.badRequest(
-        'Availability window end time must be greater than the start time',
-        {
-          code: 'WINDOW_END_TIME_GREATER_THAN_START_TIME',
-          cause: error,
-        },
-      );
+      return AppError.badRequest('End time must be after start time.', {
+        code: 'WINDOW_END_TIME_NOT_AFTER_START_TIME',
+        cause: error,
+      });
     }
 
     if (error.constraint === 'valid_reservation_time_check') {
@@ -247,8 +244,7 @@ function translatePgError(error) {
         cause: error,
       });
     }
-    // I plan on adding an employee role to the users table in Step 8,
-    // so this can be useful for employees and admins, not regular users.
+    // This can be useful for employees and admins, not regular users.
     // A regular user should not be able to modify completion or status at all.
 
     // -------------------------------------------------------------------------
@@ -322,6 +318,36 @@ function translatePgError(error) {
         'Cannot create durations for a deleted availability window',
         {
           code: 'DURATION_WINDOW_DELETED',
+          cause: error,
+        },
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // Other triggers
+    // -------------------------------------------------------------------------
+
+    if (
+      error.message ===
+      'The maximum number of durations you can have for one availability window is 10.'
+    ) {
+      return AppError.badRequest(
+        'An availability window can have at most 10 allowed durations.',
+        {
+          code: 'TOO_MANY_ALLOWED_DURATIONS',
+          cause: error,
+        },
+      );
+    }
+
+    if (
+      error.message ===
+      'Cannot delete the last allowed duration for an active availability window.'
+    ) {
+      return AppError.conflict(
+        'Cannot delete the last allowed duration for an active availability window.',
+        {
+          code: 'CANNOT_DELETE_LAST_ALLOWED_DURATION',
           cause: error,
         },
       );

@@ -150,6 +150,7 @@ export async function countActiveResources(search) {
 
 export async function getResourceById({
   resourceId,
+  forPublic = false,
   forUpdate = false,
   client = db,
 }) {
@@ -166,6 +167,7 @@ export async function getResourceById({
       deleted_at
     FROM resources
     WHERE id = $1
+    ${forPublic ? 'AND deleted_at IS NULL AND is_active = TRUE' : ''}
     ${forUpdate ? 'FOR UPDATE' : ''}
   `;
 

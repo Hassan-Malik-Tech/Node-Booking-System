@@ -105,7 +105,7 @@ FOR EACH ROW
 EXECUTE FUNCTION no_reservations_for_deleted_user();
 
 CREATE OR REPLACE TRIGGER trg_before_aw_no_windows_for_inactive_or_deleted_resource
-BEFORE INSERT
+BEFORE INSERT 
 ON availability_windows
 FOR EACH ROW
 EXECUTE FUNCTION no_availability_windows_for_inactive_or_deleted_resource();
@@ -115,3 +115,19 @@ BEFORE INSERT
 ON availability_window_allowed_durations
 FOR EACH ROW
 EXECUTE FUNCTION no_durations_for_deleted_availability_window();
+
+----------------------------------------------------------------
+-- Others
+----------------------------------------------------------------
+
+CREATE OR REPLACE TRIGGER trg_before_aw_allowed_trg_aw_duration_max_10_for_window
+BEFORE INSERT
+ON availability_window_allowed_durations
+FOR EACH ROW
+EXECUTE FUNCTION max_number_of_durations_for_window();
+
+CREATE OR REPLACE TRIGGER trg_before_aw_duration_keep_one
+BEFORE DELETE
+ON availability_window_allowed_durations
+FOR EACH ROW
+EXECUTE FUNCTION prevent_deleting_last_allowed_duration();

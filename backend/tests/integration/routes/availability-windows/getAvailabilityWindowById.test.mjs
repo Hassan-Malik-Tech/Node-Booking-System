@@ -101,7 +101,7 @@ describe('/api/availability-windows', () => {
 
         expect(response.status).toBe(200);
         expect(response.body.data.id).toBe(availabilityWindow.id);
-        expect(response.body.data.deletedAt).not.toBeNull();
+        expect(response.body.data.deletedAt).toEqual(expect.any(String));
       });
 
       test('returns empty allowedDurations when window has no duration rows', async () => {

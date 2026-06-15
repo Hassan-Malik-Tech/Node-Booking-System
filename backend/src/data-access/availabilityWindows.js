@@ -21,6 +21,9 @@ export const getAvailabilityWindowById =
 export const createAvailabilityWindow =
   sqlAvailabilityWindowQueries.createAvailabilityWindow;
 
+export const updateFutureAvailabilityWindow =
+  sqlAvailabilityWindowQueries.updateFutureAvailabilityWindow;
+
 export const softDeleteAvailabilityWindowById =
   sqlAvailabilityWindowQueries.softDeleteAvailabilityWindowById;
 
@@ -30,8 +33,11 @@ export const createAllowedDuration =
 export const createAllowedDurations =
   sqlAvailabilityWindowQueries.createAllowedDurations;
 
-export const createAvailabilityWindowsWithDurations =
-  sqlAvailabilityWindowQueries.createAvailabilityWindowsWithDurations;
+export const deleteAllowedDurationByDurationIdAndWindowId =
+  sqlAvailabilityWindowQueries.deleteAllowedDurationByDurationIdAndWindowId;
+
+export const getAllowedDurationByDurationIdAndWindowId =
+  sqlAvailabilityWindowQueries.getAllowedDurationByDurationIdAndWindowId;
 
 export const softDeleteAvailabilityWindowsByResourceId =
   sqlAvailabilityWindowQueries.softDeleteAvailabilityWindowsByResourceId;

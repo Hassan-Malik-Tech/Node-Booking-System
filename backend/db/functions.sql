@@ -142,3 +142,45 @@ RETURN NEW;
 END;
 $$;
 
+----------------------------------------------------------------
+-- Others
+----------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION max_number_of_durations_for_window()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF (
+    SELECT COUNT(*)
+    FROM availability_window_allowed_durations
+    WHERE availability_window_id = NEW.availability_window_id
+  ) >= 10
+    THEN RAISE EXCEPTION 'The maximum number of durations you can have for one availability window is 10.';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION prevent_deleting_last_allowed_duration()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF (
+    SELECT COUNT(*)
+    FROM availability_window_allowed_durations
+    WHERE availability_window_id = OLD.availability_window_id
+  ) <= 1
+  AND (
+    SELECT deleted_at
+    FROM availability_windows
+    WHERE id = OLD.availability_window_id
+  ) IS NULL THEN
+    RAISE EXCEPTION 'Cannot delete the last allowed duration for an active availability window.';
+  END IF;
+
+  RETURN OLD;
+END;
+$$;

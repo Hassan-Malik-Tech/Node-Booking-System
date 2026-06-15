@@ -11,6 +11,7 @@ import * as db from '../../db/db.js';
 
 export async function getResourceOrThrow({
   resourceId,
+  forPublic = false,
   forUpdate = false,
   client = db,
 }) {
@@ -20,6 +21,7 @@ export async function getResourceOrThrow({
 
   const resource = await resourceQueries.getResourceById({
     resourceId,
+    forPublic,
     forUpdate,
     client,
   });
@@ -31,27 +33,7 @@ export async function getResourceOrThrow({
   return resource;
 }
 
-async function getPublicResourceOrThrow({
-  resourceId,
-  forUpdate = false,
-  client = db,
-}) {
-  const resource = await getResourceOrThrow({
-    resourceId,
-    forUpdate,
-    client,
-  });
-
-  if (resource.deleted_at !== null || resource.is_active === false) {
-    throw resourceNotFound();
-  }
-
-  return resource;
-}
-
-
-
-function requireOwner({ resource, authUserId }) {
+export function requireOwner({ resource, authUserId }) {
   if (resource.owner_id !== authUserId) {
     throw forbidden();
   }
@@ -63,7 +45,7 @@ function requireOwnerOrAdmin({ resource, authUserId, userRole }) {
   }
 }
 
-function requireNotDeleted({ resource, message }) {
+export function requireNotDeleted({ resource, message }) {
   if (resource.deleted_at !== null) {
     throw resourceDeleted(message);
   }
@@ -171,8 +153,9 @@ export async function requirePublicResource({
   forUpdate = false,
   client = db,
 }) {
-  const resource = await getPublicResourceOrThrow({
+  const resource = await getResourceOrThrow({
     resourceId,
+    forPublic: true,
     forUpdate,
     client,
   });

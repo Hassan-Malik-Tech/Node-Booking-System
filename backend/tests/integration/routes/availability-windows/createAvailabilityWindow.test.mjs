@@ -90,7 +90,7 @@ describe('/api/resources', () => {
 
           const deletedUser = await softDeleteTestUser(user.id);
 
-          expect(deletedUser.deleted_at).toBeDefined();
+          expect(deletedUser.deleted_at).toEqual(expect.any(Date));
 
           const response = await request(app)
             .post(`/api/resources/${resource.id}/availability-windows`)
@@ -136,7 +136,7 @@ describe('/api/resources', () => {
             deleted: true,
           });
 
-          expect(deletedResource.deleted_at).toBeDefined();
+          expect(deletedResource.deleted_at).toEqual(expect.any(Date));
 
           const response = await request(app)
             .post(`/api/resources/${deletedResource.id}/availability-windows`)
@@ -436,6 +436,69 @@ describe('/api/resources', () => {
             errorMessage: 'Invalid availability window create request body.',
             field: 'allowedDurations',
             detailsMessage: 'Allowed durations must be an array.',
+          });
+        });
+
+        test('for startTime that is in the past', async () => {
+          const { user, accessToken } = await createAuthenticatedTestUser();
+          const resource = await createTestResource({ owner: user });
+
+          const response = await request(app)
+            .post(`/api/resources/${resource.id}/availability-windows`)
+            .set('Authorization', `Bearer ${accessToken}`)
+            .send(
+              buildCreateAvailabilityWindowRequestBody({
+                startTime: '2025-01-01T09:00:00.000Z',
+              }),
+            );
+
+          expectValidationErrorResponse({
+            response,
+            errorMessage: 'Invalid availability window create request body.',
+            field: 'startTime',
+            detailsMessage: 'Start time must be in the future.',
+          });
+        });
+
+        test('for cancellationNoticeMinutes that is not a number', async () => {
+          const { user, accessToken } = await createAuthenticatedTestUser();
+          const resource = await createTestResource({ owner: user });
+
+          const response = await request(app)
+            .post(`/api/resources/${resource.id}/availability-windows`)
+            .set('Authorization', `Bearer ${accessToken}`)
+            .send(
+              buildCreateAvailabilityWindowRequestBody({
+                cancellationNoticeMinutes: 'not-a-number',
+              }),
+            );
+
+          expectValidationErrorResponse({
+            response,
+            errorMessage: 'Invalid availability window create request body.',
+            field: 'cancellationNoticeMinutes',
+            detailsMessage: 'Cancellation notice minutes must be a number.',
+          });
+        });
+
+        test('for cancellationNoticeMinutes that is not an integer', async () => {
+          const { user, accessToken } = await createAuthenticatedTestUser();
+          const resource = await createTestResource({ owner: user });
+
+          const response = await request(app)
+            .post(`/api/resources/${resource.id}/availability-windows`)
+            .set('Authorization', `Bearer ${accessToken}`)
+            .send(
+              buildCreateAvailabilityWindowRequestBody({
+                cancellationNoticeMinutes: 1.5,
+              }),
+            );
+
+          expectValidationErrorResponse({
+            response,
+            errorMessage: 'Invalid availability window create request body.',
+            field: 'cancellationNoticeMinutes',
+            detailsMessage: 'Cancellation notice minutes must be an integer.',
           });
         });
 

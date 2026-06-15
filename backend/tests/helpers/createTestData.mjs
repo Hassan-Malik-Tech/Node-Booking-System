@@ -138,7 +138,9 @@ export async function createTestAvailabilityWindow({
   let deletedWindow;
 
   if (deleted) {
-    deletedWindow = await softDeleteAvailabilityWindowById(window.id);
+    deletedWindow = await softDeleteAvailabilityWindowById({
+      windowId: window.id,
+    });
   }
 
   return {
