@@ -19,3 +19,14 @@ export const cancelReservationById =
 
 export const getFutureActiveReservationsByWindowId =
   sqlReservationQueries.getFutureActiveReservationsByWindowId;
+
+export const getReservationAlreadyBookedByUser =
+  sqlReservationQueries.getReservationAlreadyBookedByUser;
+
+export const getReservationById = sqlReservationQueries.getReservationById;
+
+export const completeOngoingOrExpiredReservationByStaff =
+  sqlReservationQueries.completeOngoingOrExpiredReservationByStaff;
+
+export const updateFutureReservationPartySize =
+  sqlReservationQueries.updateFutureReservationPartySize;

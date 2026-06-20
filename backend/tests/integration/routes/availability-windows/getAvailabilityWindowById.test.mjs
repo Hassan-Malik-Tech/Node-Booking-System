@@ -185,7 +185,7 @@ describe('/api/availability-windows', () => {
             .get('/api/availability-windows/999999999')
             .set('Authorization', `Bearer ${accessToken}`);
 
-          expectAvailabilityWindowNotFoundResponse(response);
+          expectAvailabilityWindowNotFoundResponse({ response });
         });
       });
 

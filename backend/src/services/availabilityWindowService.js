@@ -1,7 +1,6 @@
 import * as availabilityWindowQueries from '../data-access/availabilityWindows.js';
 import * as reservationQueries from '../data-access/reservations.js';
 import AppError from '../errors/AppError.js';
-import ERROR_CODES from '../errors/errorCodes.js';
 import caughtError from '../errors/caughtError.js';
 import {
   getLimitAndOffset,
@@ -15,6 +14,8 @@ import {
   availabilityWindowNotFound,
   availabilityWindowStateChanged,
 } from '../errors/commonErrors.js';
+import ERROR_CODES from '../errors/errorCodes.js';
+import { lockUserOrThrow } from './helpers/userHelpers.js';
 
 function mapAvailabilityWindow(window) {
   return {
@@ -185,6 +186,8 @@ export async function createAvailabilityWindow({
 
     await client.query('BEGIN');
 
+    await lockUserOrThrow({ userId: authUserId, client });
+
     const { startTime, endTime, cancellationNoticeMinutes, allowedDurations } =
       availabilityWindowData;
 
@@ -282,6 +285,8 @@ export async function createAvailabilityWindowsInBulk({
 
     await client.query('BEGIN');
 
+    await lockUserOrThrow({ userId: authUserId, client });
+
     await resourceRules.requireOwnedActiveResource({
       resourceId,
       authUserId,
@@ -337,6 +342,8 @@ export async function updateFutureAvailabilityWindow({
     client = await db.getClient();
 
     await client.query('BEGIN');
+
+    await lockUserOrThrow({ userId: authUserId, client });
 
     const availabilityWindow =
       await availabilityWindowRules.requireOwnedFutureAvailabilityWindow({
@@ -424,11 +431,7 @@ export async function updateFutureAvailabilityWindow({
   }
 }
 
-export async function softDeleteAvailabilityWindow({
-  windowId,
-  authUserId,
-  userRole,
-}) {
+export async function softDeleteAvailabilityWindow({ windowId, authUserId }) {
   let client;
 
   try {
@@ -436,13 +439,15 @@ export async function softDeleteAvailabilityWindow({
 
     await client.query('BEGIN');
 
+    const authUser = await lockUserOrThrow({ userId: authUserId, client });
+
     // deletedResourceMessage is short since this is a gaurd.
     // Once a resource is deleted all the windows get deleted
     // as well, so this should not normally be sent.
     await availabilityWindowRules.requireOwnedActiveAvailabilityWindowOrAdmin({
       windowId,
       authUserId,
-      userRole,
+      userRole: authUser.role,
       deletedResourceMessage: 'Resource has been deleted.',
       expiredMessage: 'Cannot delete an expired availability window.',
       forUpdate: true,
@@ -506,6 +511,8 @@ export async function createAllowedDurations({
     client = await db.getClient();
 
     await client.query('BEGIN');
+
+    await lockUserOrThrow({ userId: authUserId, client });
 
     const availabilityWindow =
       await availabilityWindowRules.requireOwnedFutureAvailabilityWindow({
@@ -576,6 +583,8 @@ export async function deleteAllowedDuration({
 
     await client.query('BEGIN');
 
+    await lockUserOrThrow({ userId: authUserId, client });
+
     const availabilityWindow =
       await availabilityWindowRules.requireOwnedFutureAvailabilityWindow({
         windowId,
@@ -645,7 +654,7 @@ export async function deleteAllowedDuration({
       for (const reservation of reservations) {
         const reservationDurationMinutes =
           (reservation.end_time.getTime() - reservation.start_time.getTime()) /
-          60000;
+          60_000;
 
         if (!remainingAllowedDurations.includes(reservationDurationMinutes)) {
           const cancelledReservation =

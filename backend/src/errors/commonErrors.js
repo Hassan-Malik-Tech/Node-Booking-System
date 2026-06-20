@@ -13,8 +13,8 @@ export function resourceNotFound() {
   });
 }
 
-export function forbidden() {
-  return AppError.forbidden('Forbidden.');
+export function forbidden({ message } = {}) {
+  return AppError.forbidden(message ?? 'Forbidden.');
 }
 
 export function resourceInactive(message) {
@@ -35,23 +35,35 @@ export function resourceDeleted(message) {
   );
 }
 
-export function resourceStateChanged() {
-  return AppError.conflict('Resource state changed during request.', {
-    code: ERROR_CODES.RESOURCE_STATE_CHANGED,
-  });
+export function resourceStateChanged({ message } = {}) {
+  return AppError.conflict(
+    message ?? 'Resource state changed during request.',
+    {
+      code: ERROR_CODES.RESOURCE_STATE_CHANGED,
+    },
+  );
 }
 
-export function availabilityWindowNotFound() {
-  return AppError.notFound('Availability window not found.', {
+export function availabilityWindowNotFound(message) {
+  return AppError.notFound(message ?? 'Availability window not found.', {
     code: ERROR_CODES.AVAILABILITY_WINDOW_NOT_FOUND,
   });
 }
 
-export function availabilityWindowStateChanged() {
+export function availabilityWindowStateChanged({ message } = {}) {
   return AppError.conflict(
-    'Availability window state changed during request.',
+    message ?? 'Availability window state changed during request.',
     {
       code: ERROR_CODES.AVAILABILITY_WINDOW_STATE_CHANGED,
+    },
+  );
+}
+
+export function reservationStateChanged({ message } = {}) {
+  return AppError.conflict(
+    message ?? 'Reservation state changed during request.',
+    {
+      code: ERROR_CODES.RESERVATION_STATE_CHANGED,
     },
   );
 }

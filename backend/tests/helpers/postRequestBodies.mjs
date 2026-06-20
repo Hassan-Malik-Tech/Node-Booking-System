@@ -75,3 +75,30 @@ export function buildCreateResourceRequestBody({
 
   return createResourceReqBody;
 }
+
+export function buildBookReservationRequestBody({
+  resource,
+  availabilityWindow,
+  ...overrides
+}) {
+  const windowStartTimeMs = availabilityWindow.start_time.getTime();
+  // Instead of hard coding the duration, i make it equal to the first
+  // allowed duration of the window in ms.
+  const reservationDurationMs =
+    availabilityWindow.allowed_durations[0].minutes * 60_000;
+
+  const reservationStartTime = availabilityWindow.start_time.toISOString();
+
+  const reservationEndTime = new Date(
+    windowStartTimeMs + reservationDurationMs,
+  ).toISOString();
+
+  return {
+    resourceId: resource.id,
+    availabilityWindowId: availabilityWindow.id,
+    startTime: reservationStartTime,
+    endTime: reservationEndTime,
+    partySize: resource.capacity,
+    ...overrides,
+  };
+}

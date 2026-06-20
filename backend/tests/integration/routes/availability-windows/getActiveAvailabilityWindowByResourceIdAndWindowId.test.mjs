@@ -98,7 +98,7 @@ describe('/api/resources', () => {
             `/api/resources/${resource.id}/availability-windows/99999`,
           );
 
-          expectAvailabilityWindowNotFoundResponse(response);
+          expectAvailabilityWindowNotFoundResponse({ response });
         });
 
         test('when availability window belongs to another resource', async () => {
@@ -109,7 +109,7 @@ describe('/api/resources', () => {
             `/api/resources/${resource.id}/availability-windows/${otherWindow.id}`,
           );
 
-          expectAvailabilityWindowNotFoundResponse(response);
+          expectAvailabilityWindowNotFoundResponse({ response });
         });
 
         test('when availability window is expired', async () => {
@@ -121,7 +121,7 @@ describe('/api/resources', () => {
             `/api/resources/${expiredWindow.resource.id}/availability-windows/${expiredWindow.id}`,
           );
 
-          expectAvailabilityWindowNotFoundResponse(response);
+          expectAvailabilityWindowNotFoundResponse({ response });
         });
 
         test('when availability window is soft deleted', async () => {
@@ -133,7 +133,7 @@ describe('/api/resources', () => {
             `/api/resources/${deletedWindow.resource.id}/availability-windows/${deletedWindow.id}`,
           );
 
-          expectAvailabilityWindowNotFoundResponse(response);
+          expectAvailabilityWindowNotFoundResponse({ response });
         });
       });
 

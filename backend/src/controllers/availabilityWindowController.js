@@ -98,10 +98,9 @@ export async function updateFutureAvailabilityWindow(req, res) {
 export async function softDeleteAvailabilityWindow(req, res) {
   const windowId = req.validated.params.availabilityWindowId;
   const authUserId = req.user.id;
-  const userRole = req.user.role;
 
   const { data } = await availabilityWindowService.softDeleteAvailabilityWindow(
-    { windowId, authUserId, userRole },
+    { windowId, authUserId },
   );
 
   return res.status(200).json(success({ data }));

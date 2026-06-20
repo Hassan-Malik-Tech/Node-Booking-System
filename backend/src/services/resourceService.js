@@ -7,13 +7,13 @@ import {
   buildPagination,
 } from './helpers/paginationHelpers.js';
 import {
-  resourceNotFound,
   resourceStateChanged,
   resourceDeleted,
 } from '../errors/commonErrors.js';
 import { createAvailabilityWindowsForResource } from './helpers/availabilityWindowHelpers.js';
 import * as db from '../db/db.js';
 import * as resourceRules from './rules/resourceRules.js';
+import { lockUserOrThrow } from './helpers/userHelpers.js';
 
 function mapResourceForPublic(resource) {
   return {
@@ -155,7 +155,10 @@ export async function createResource({
 
     await client.query('BEGIN');
 
-    const { isActive } = resourceData;
+    // To make it clear that the ownerId is the authUserId.
+    const { isActive, ownerId: authUserId } = resourceData;
+
+    await lockUserOrThrow({ userId: authUserId, client });
 
     const resource = await resourceQueries.createResource({
       resourceData,
@@ -212,6 +215,8 @@ export async function updateResource({ resourceId, authUserId, updateData }) {
     client = await db.getClient();
 
     await client.query('BEGIN');
+
+    await lockUserOrThrow({ userId: authUserId, client });
 
     await resourceRules.requireOwnedNonDeletedResource({
       resourceId,
@@ -276,13 +281,15 @@ export async function updateResource({ resourceId, authUserId, updateData }) {
   }
 }
 
-export async function deactivateResource({ resourceId, userRole, authUserId }) {
+export async function deactivateResource({ resourceId, authUserId }) {
   let client;
 
   try {
     client = await db.getClient();
 
     await client.query('BEGIN');
+
+    const authUser = await lockUserOrThrow({ userId: authUserId, client });
 
     // Without locking, two requests can both read the resource as active.
     // Example:
@@ -294,7 +301,7 @@ export async function deactivateResource({ resourceId, userRole, authUserId }) {
     await resourceRules.requireOwnedActiveResourceOrAdmin({
       resourceId,
       authUserId,
-      userRole,
+      userRole: authUser.role,
       deletedMessage: 'Cannot deactivate a deleted resource.',
       inactiveMessage: 'Resource is already inactive.',
       forUpdate: true,
@@ -362,6 +369,8 @@ export async function activateResource({
 
     await client.query('BEGIN');
 
+    await lockUserOrThrow({ userId: authUserId, client });
+
     await resourceRules.requireOwnedInactiveResource({
       resourceId,
       authUserId,
@@ -420,7 +429,7 @@ export async function activateResource({
   }
 }
 
-export async function softDeleteResource({ resourceId, authUserId, userRole }) {
+export async function softDeleteResource({ resourceId, authUserId }) {
   let client;
 
   try {
@@ -428,10 +437,12 @@ export async function softDeleteResource({ resourceId, authUserId, userRole }) {
 
     await client.query('BEGIN');
 
+    const authUser = await lockUserOrThrow({ userId: authUserId, client });
+
     await resourceRules.requireOwnedNonDeletedResourceOrAdmin({
       resourceId,
       authUserId,
-      userRole,
+      userRole: authUser.role,
       deletedMessage: 'Resource is already deleted.',
       forUpdate: true,
       client,

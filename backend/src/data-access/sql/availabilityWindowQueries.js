@@ -76,7 +76,24 @@ export async function countActiveAvailabilityWindowsByResourceId(resourceId) {
 export async function getActiveAvailabilityWindowByResourceIdAndWindowId({
   resourceId,
   windowId,
+  forUpdate = false,
+  client = db,
 }) {
+  if (forUpdate === true) {
+    await client.query(
+      `
+        SELECT id
+        FROM availability_windows
+        WHERE resource_id = $1
+          AND id = $2
+          AND deleted_at IS NULL
+          AND end_time > NOW()
+        FOR UPDATE
+      `,
+      [resourceId, windowId],
+    );
+  }
+
   const sql = `
     SELECT
       aw.id,
@@ -106,7 +123,7 @@ export async function getActiveAvailabilityWindowByResourceIdAndWindowId({
     GROUP BY aw.id
   `;
 
-  const result = await db.query(sql, [resourceId, windowId]);
+  const result = await client.query(sql, [resourceId, windowId]);
 
   return result.rows[0] ?? null;
 }
@@ -321,19 +338,26 @@ export async function softDeleteAvailabilityWindowsByResourceId({
   return deletedWindowIds.length;
 }
 
-// For admin/employee route
 export async function getAvailabilityWindowById({
   windowId,
   includeDeleted = false,
+  forPublic = false,
   forUpdate = false,
   client = db,
 }) {
+  if (forPublic && includeDeleted) {
+    throw new Error(
+      'You cannot filter by both forPublic and includeDeleted at the same time.',
+    );
+  }
+
   if (forUpdate === true) {
     await client.query(
       `
     SELECT id
     FROM availability_windows
     WHERE id = $1
+    ${forPublic ? 'AND end_time > NOW() AND deleted_at IS NULL' : ''}
     ${includeDeleted ? '' : 'AND deleted_at IS NULL'}
     FOR UPDATE
   `,
@@ -365,6 +389,7 @@ export async function getAvailabilityWindowById({
     LEFT JOIN availability_window_allowed_durations ad
       ON aw.id = ad.availability_window_id
     WHERE aw.id = $1
+    ${forPublic ? 'AND end_time > NOW() AND deleted_at IS NULL' : ''}
     ${includeDeleted ? '' : 'AND aw.deleted_at IS NULL'}
     GROUP BY aw.id
   `;
@@ -454,6 +479,34 @@ export async function getAllowedDurationByDurationIdAndWindowId({
   `;
 
   const result = await client.query(sql, [durationId, windowId]);
+
+  return result.rows[0] ?? null;
+}
+
+// Used to put reservationDurationMinutes as minutes
+// If it returns something then the reservation minutes
+// is valid since it equals one of the allowed durations
+// for the window.
+//
+// It also locks the duration for race condition.
+export async function getAllowedDurationByWindowIdAndMinutes({
+  windowId,
+  minutes,
+  forUpdate = false,
+  client = db,
+}) {
+  const sql = `
+    SELECT
+      id,
+      availability_window_id,
+      duration_minutes
+    FROM availability_window_allowed_durations
+    WHERE availability_window_id = $1
+      AND duration_minutes = $2
+    ${forUpdate ? 'FOR UPDATE' : ''}
+  `;
+
+  const result = await client.query(sql, [windowId, minutes]);
 
   return result.rows[0] ?? null;
 }

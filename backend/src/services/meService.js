@@ -1,10 +1,10 @@
 import * as userQueries from '../data-access/users.js';
 import caughtError from '../errors/caughtError.js';
 import AppError from '../errors/AppError.js';
-import ERROR_CODES from '../errors/errorCodes.js';
 import { mapUser } from './helpers/commonMappers.js';
 import { hashPassword } from '../auth/password.js';
 import { invalidTokenError } from '../errors/commonErrors.js';
+import ERROR_CODES from '../errors/errorCodes.js';
 
 export function getProfile(user) {
   return {

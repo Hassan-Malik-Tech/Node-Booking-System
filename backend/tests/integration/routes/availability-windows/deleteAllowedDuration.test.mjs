@@ -358,7 +358,7 @@ describe('/api/availability-windows', () => {
             .delete('/api/availability-windows/99999/allowed-durations/1')
             .set('Authorization', `Bearer ${accessToken}`);
 
-          expectAvailabilityWindowNotFoundResponse(response);
+          expectAvailabilityWindowNotFoundResponse({ response });
         });
 
         test('when availability window is soft deleted', async () => {
@@ -378,7 +378,7 @@ describe('/api/availability-windows', () => {
             )
             .set('Authorization', `Bearer ${accessToken}`);
 
-          expectAvailabilityWindowNotFoundResponse(response);
+          expectAvailabilityWindowNotFoundResponse({ response });
         });
       });
 

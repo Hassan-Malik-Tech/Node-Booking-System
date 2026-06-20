@@ -1,7 +1,5 @@
 import { SignJWT, jwtVerify } from 'jose';
 import config from '../config/index.js';
-import AppError from '../errors/AppError.js';
-import ERROR_CODES from '../errors/errorCodes.js';
 import { invalidTokenError } from '../errors/commonErrors.js';
 
 // converts secret into bytes as jose needs byte key material for signing and verifying tokens.

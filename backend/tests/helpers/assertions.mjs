@@ -75,24 +75,28 @@ export function expectResourceNotFoundResponse(response) {
   });
 }
 
-export function expectForbiddenResponse(response) {
+// To avoid refactoring old tests, response is kept outside of the options object.
+export function expectForbiddenResponse(response, { message } = {}) {
   expect(response.status).toBe(403);
   expect(response.body).toEqual({
     success: false,
     error: {
       code: 'FORBIDDEN',
-      message: 'Forbidden.',
+      message: message ?? 'Forbidden.',
     },
   });
 }
 
-export function expectAvailabilityWindowNotFoundResponse(response) {
+export function expectAvailabilityWindowNotFoundResponse({
+  response,
+  message,
+}) {
   expect(response.status).toBe(404);
   expect(response.body).toEqual({
     success: false,
     error: {
       code: 'AVAILABILITY_WINDOW_NOT_FOUND',
-      message: 'Availability window not found.',
+      message: message ?? 'Availability window not found.',
     },
   });
 }
@@ -143,13 +147,94 @@ export function expectResourceInactiveResponse({ response, message }) {
   });
 }
 
-export function expectNotAFutureAvailabilityWindowResponse({ response, message }) {
+export function expectNotAFutureAvailabilityWindowResponse({
+  response,
+  message,
+}) {
   expect(response.status).toBe(409);
   expect(response.body).toEqual({
     success: false,
     error: {
       code: 'NOT_A_FUTURE_AVAILABILITY_WINDOW',
       message,
+    },
+  });
+}
+
+export function expectCancelledReservationResponse({ response, reservation }) {
+  expect(response.status).toBe(200);
+  expect(response.body).toEqual({
+    success: true,
+    data: {
+      reservationId: reservation.id,
+      status: 'cancelled',
+      cancelledAt: expect.any(String),
+    },
+  });
+}
+
+export function expectReservationNotFoundResponse({ response }) {
+  expect(response.status).toBe(404);
+  expect(response.body).toEqual({
+    success: false,
+    error: {
+      code: 'RESERVATION_NOT_FOUND',
+      message: 'Reservation not found.',
+    },
+  });
+}
+
+export function expectReservationCompletedResponse({
+  response,
+  reservation,
+  staff,
+}) {
+  expect(response.status).toBe(200);
+  expect(response.body).toEqual({
+    success: true,
+    data: {
+      id: reservation.id,
+      userId: reservation.user.id,
+      resourceId: reservation.resource.id,
+      availabilityWindowId: reservation.availabilityWindow.id,
+      startTime: reservation.start_time.toISOString(),
+      endTime: reservation.end_time.toISOString(),
+      partySize: reservation.party_size,
+      status: 'completed',
+      staffCompletedByUserId: staff.id,
+      systemCompletedAt: null,
+      staffCompletedAt: expect.any(String),
+      cancelledAt: null,
+      createdAt: expect.any(String),
+      updatedAt: expect.any(String),
+    },
+  });
+}
+
+export function expectReservationAlreadyCompletedResponse({
+  response,
+  message,
+}) {
+  expect(response.status).toBe(409);
+  expect(response.body).toEqual({
+    success: false,
+    error: {
+      code: 'RESERVATION_ALREADY_COMPLETED',
+      message: message ?? 'Reservation already completed.',
+    },
+  });
+}
+
+export function expectReservationAlreadyCancelledResponse({
+  response,
+  message,
+}) {
+  expect(response.status).toBe(409);
+  expect(response.body).toEqual({
+    success: false,
+    error: {
+      code: 'RESERVATION_ALREADY_CANCELLED',
+      message: message ?? 'Reservation is already cancelled.',
     },
   });
 }

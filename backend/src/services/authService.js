@@ -1,11 +1,11 @@
 import * as userQueries from '../data-access/users.js';
 import caughtError from '../errors/caughtError.js';
 import AppError from '../errors/AppError.js';
-import ERROR_CODES from '../errors/errorCodes.js';
 import { hashPassword, verifyPassword } from '../auth/password.js';
 import { mapUser } from './helpers/commonMappers.js';
 import { signAccessToken } from '../auth/authToken.js';
 import config from '../config/index.js';
+import ERROR_CODES from '../errors/errorCodes.js';
 
 export async function registerUser(userData) {
   try {

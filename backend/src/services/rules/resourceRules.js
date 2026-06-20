@@ -1,13 +1,15 @@
 import * as resourceQueries from '../../data-access/resources.js';
+import * as availabilityWindowQueries from '../../data-access/availabilityWindows.js';
 import AppError from '../../errors/AppError.js';
 import {
   forbidden,
   resourceDeleted,
   resourceInactive,
   resourceNotFound,
+  availabilityWindowNotFound,
 } from '../../errors/commonErrors.js';
-import ERROR_CODES from '../../errors/errorCodes.js';
 import * as db from '../../db/db.js';
+import ERROR_CODES from '../../errors/errorCodes.js';
 
 export async function getResourceOrThrow({
   resourceId,
@@ -161,4 +163,38 @@ export async function requirePublicResource({
   });
 
   return resource;
+}
+
+export async function requirePublicResourceAndAvailabilityWindow({
+  resourceId,
+  windowId,
+  forUpdate = false,
+  client = db,
+}) {
+  const resource = await requirePublicResource({
+    resourceId,
+    forUpdate,
+    client,
+  });
+
+  const availabilityWindow =
+    await availabilityWindowQueries.getActiveAvailabilityWindowByResourceIdAndWindowId(
+      {
+        resourceId,
+        windowId,
+        forUpdate,
+        client,
+      },
+    );
+
+  if (!availabilityWindow) {
+    throw availabilityWindowNotFound(
+      'No active availability window with that id was found for this resource.',
+    );
+  }
+
+  return {
+    resource,
+    availabilityWindow,
+  };
 }

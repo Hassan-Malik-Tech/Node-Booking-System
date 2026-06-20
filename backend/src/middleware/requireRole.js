@@ -1,5 +1,4 @@
 import AppError from '../errors/AppError.js';
-import ERROR_CODES from '../errors/errorCodes.js';
 
 export default function requireRole(allowedRoles) {
   return function requireRoleMiddleware(req, res, next) {

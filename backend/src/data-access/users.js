@@ -8,3 +8,4 @@ export const getActiveUserByUsername = sqlUserQueries.getActiveUserByUsername;
 export const getActiveUserById = sqlUserQueries.getActiveUserById;
 export const updateActiveUserById = sqlUserQueries.updateActiveUserById;
 export const updatePassword = sqlUserQueries.updatePassword;
+export const lockUser = sqlUserQueries.lockUser;

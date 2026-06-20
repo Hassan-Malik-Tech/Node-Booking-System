@@ -114,7 +114,7 @@ function validateUtcHalfHourBoundary(time, helpers) {
 // .iso() means Joi only accepts date input that is in ISO 8601 date format.
 // Example: '2026-03-24T09:00:00Z'
 // .greater('now') means greater than now
-const startTimeSchema = Joi.date()
+export const startTimeSchema = Joi.date()
   .iso()
   .greater('now')
   .custom(validateUtcHalfHourBoundary)
@@ -129,7 +129,7 @@ const startTimeSchema = Joi.date()
 
 // Should not have greater(Joi.ref('startTime'))
 // as update may not include startTime.
-const endTimeSchema = Joi.date()
+export const endTimeSchema = Joi.date()
   .iso()
   .custom(validateUtcHalfHourBoundary)
   .messages({

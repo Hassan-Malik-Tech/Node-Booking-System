@@ -38,12 +38,12 @@ export async function getResourceByIdForManagement(req, res) {
 
 export async function createResource(req, res) {
   const { resourceData, availabilityWindowDataList } = req.validated.body;
-  const ownerId = req.user.id;
+  const authUserId = req.user.id;
 
   const { data } = await resourceService.createResource({
     resourceData: {
       ...resourceData,
-      ownerId,
+      ownerId: authUserId,
     },
     availabilityWindowDataList,
   });
@@ -71,11 +71,9 @@ export async function updateResource(req, res) {
 export async function deactivateResource(req, res) {
   const resourceId = req.validated.params.resourceId;
   const authUserId = req.user.id;
-  const userRole = req.user.role;
 
   const { data } = await resourceService.deactivateResource({
     resourceId,
-    userRole,
     authUserId,
   });
 
@@ -99,12 +97,10 @@ export async function activateResource(req, res) {
 export async function softDeleteResource(req, res) {
   const resourceId = req.validated.params.resourceId;
   const authUserId = req.user.id;
-  const userRole = req.user.role;
 
   const { data } = await resourceService.softDeleteResource({
     resourceId,
     authUserId,
-    userRole,
   });
 
   return res.status(200).json(success({ data }));

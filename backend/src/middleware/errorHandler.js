@@ -1,6 +1,6 @@
 import AppError from '../errors/AppError.js';
-import ERROR_CODES from '../errors/errorCodes.js';
 import { error } from '../utils/response.js';
+import ERROR_CODES from '../errors/errorCodes.js';
 
 // Express recognizes error-handling middleware by the 4 parameters, so 4 is a must not 3
 export default function errorHandler(err, req, res, next) {

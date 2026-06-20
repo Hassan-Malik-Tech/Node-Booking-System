@@ -1,7 +1,7 @@
 import * as userQueries from '../data-access/users.js';
 import AppError from '../errors/AppError.js';
-import ERROR_CODES from '../errors/errorCodes.js';
 import caughtError from '../errors/caughtError.js';
+import ERROR_CODES from '../errors/errorCodes.js';
 
 function mapUser(user) {
   return {

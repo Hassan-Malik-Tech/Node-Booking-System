@@ -1,9 +1,9 @@
 import * as availabilityWindowQueries from '../../data-access/availabilityWindows.js';
 import * as resourceRules from './resourceRules.js';
 import AppError from '../../errors/AppError.js';
-import ERROR_CODES from '../../errors/errorCodes.js';
 import * as db from '../../db/db.js';
 import { availabilityWindowNotFound } from '../../errors/commonErrors.js';
+import ERROR_CODES from '../../errors/errorCodes.js';
 
 export function validateAllowedDurationsFitWindow({
   startTime,
@@ -13,8 +13,8 @@ export function validateAllowedDurationsFitWindow({
   // joi validation shold convert these values to Date objects first.
   // getTime gets the time in ms from a Date object since jan 01 1970 midnight.
   const windowLengthMs = endTime.getTime() - startTime.getTime();
-  // There are 60000 ms in a min (60 seconds in a min * 1000 ms in a second )
-  const windowLengthMins = windowLengthMs / 60000;
+  // There are 60_000 ms in a min (60 seconds in a min * 1000 ms in a second )
+  const windowLengthMins = windowLengthMs / 60_000;
 
   // Returns a boolean, if one of the items returns true, it stops the loop.
   const allowedDurationLongerThanWindow = allowedDurations.some(

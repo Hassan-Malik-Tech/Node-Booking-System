@@ -18,7 +18,6 @@ import {
   expectForbiddenResponse,
   expectValidationErrorResponse,
   expectAvailabilityWindowNotFoundResponse,
-  expectAvailabilityWindowConflictResponse,
   expectAllowedDurationLongerThanWindowResponse,
   expectResourceDeletedResponse,
   expectResourceInactiveResponse,
@@ -314,7 +313,7 @@ describe('/api/availability-windows', () => {
               cancellationNoticeMinutes: 30,
             });
 
-          expectAvailabilityWindowNotFoundResponse(response);
+          expectAvailabilityWindowNotFoundResponse({ response });
         });
 
         test('when availability window is soft deleted', async () => {
@@ -332,7 +331,7 @@ describe('/api/availability-windows', () => {
               cancellationNoticeMinutes: 30,
             });
 
-          expectAvailabilityWindowNotFoundResponse(response);
+          expectAvailabilityWindowNotFoundResponse({ response });
         });
       });
 

@@ -174,6 +174,22 @@ export async function getActiveUserById(userId) {
   return result.rows[0] ?? null;
 }
 
+export async function lockUser({ userId, client = db }) {
+  const sql = `
+    SELECT
+      id,
+      role
+    FROM users
+    WHERE id = $1
+      AND deleted_at IS NULL
+    FOR UPDATE
+  `;
+
+  const result = await client.query(sql, [userId]);
+
+  return result.rows[0] ?? null;
+}
+
 export async function updateActiveUserById({ userId, updateData }) {
   const { username, name, email } = updateData;
 

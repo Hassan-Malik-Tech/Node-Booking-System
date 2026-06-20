@@ -14,10 +14,7 @@ import {
   generateRandomResourceName,
 } from './generateRandomData.mjs';
 import * as db from '../../src/db/db.js';
-import {
-  softDeleteTestResource,
-  deactivateTestResource,
-} from './updateTestData.mjs';
+import { softDeleteTestResource } from './updateTestData.mjs';
 import { createReservation } from '../../src/data-access/reservations.js';
 
 const testPasswordHash = await hashPassword(TEST_PASSWORD);
@@ -104,6 +101,7 @@ export async function createTestAvailabilityWindow({
   allowedDurations = [30, 60],
   deleted = false,
   expired = false,
+  ongoing = false,
   noDurations = false,
   resource = undefined,
   resourceOwner = undefined,
@@ -113,13 +111,33 @@ export async function createTestAvailabilityWindow({
     throw new Error('resource and resourceOwner cannot both be defined.');
   }
 
+  if (ongoing && expired) {
+    throw new Error(
+      'Availability window cannot be expired and ongoing at the same time.',
+    );
+  }
+
   const testResource =
     resource ?? (await createTestResource({ owner: resourceOwner }));
 
+  let startTime;
+
+  if (ongoing || expired) {
+    startTime = '2025-01-01T09:00:00Z';
+  }
+
+  let endTime;
+
+  if (ongoing) {
+    endTime = '2036-01-01T17:00:00Z';
+  } else if (expired) {
+    endTime = '2025-01-01T17:00:00Z';
+  }
+
   const testWindowData = {
     resourceId: testResource.id,
-    startTime: expired ? '2025-01-01T09:00:00Z' : '2036-01-01T09:00:00Z',
-    endTime: expired ? '2025-01-01T17:00:00Z' : '2036-01-01T17:00:00Z',
+    startTime: startTime ?? '2036-01-01T09:00:00Z',
+    endTime: endTime ?? '2036-01-01T17:00:00Z',
     cancellationNoticeMinutes: 120,
     ...overrides,
   };
@@ -152,32 +170,108 @@ export async function createTestAvailabilityWindow({
 }
 
 export async function createTestReservation({
-  user,
-  resource,
+  user = undefined,
+  resource = undefined,
   availabilityWindow = undefined,
+  ongoing = false,
+  expired = false,
+  cancelled = false,
+  completed = false,
   ...overrides
-}) {
+} = {}) {
+  if ((ongoing || expired) && availabilityWindow !== undefined) {
+    throw new Error(
+      'Cannot use ongoing or expired when passing an availability window.',
+    );
+  }
+
+  if (cancelled && completed) {
+    throw new Error(
+      'Reservation cannot be cancelled and completed at the same time.',
+    );
+  }
+
+  const testUser = user ?? (await createTestUser());
+
   const testWindow =
-    availabilityWindow ?? (await createTestAvailabilityWindow({ resource }));
+    availabilityWindow ??
+    (await createTestAvailabilityWindow({ resource, ongoing, expired }));
+
+  const testResource = resource ?? testWindow.resource;
+
+  const windowStartTimeMs = testWindow.start_time.getTime();
+
+  const reservationDurationMs =
+    testWindow.allowed_durations[0].minutes * 60_000;
+
+  const reservationStartTime = testWindow.start_time.toISOString();
+
+  const reservationEndTime = ongoing
+    ? testWindow.end_time.toISOString()
+    : new Date(windowStartTimeMs + reservationDurationMs).toISOString();
 
   const testReservationData = {
-    resourceId: resource.id,
+    resourceId: testResource.id,
     availabilityWindowId: testWindow.id,
-    startTime: '2036-01-01T09:00:00Z',
-    endTime: '2036-01-01T09:30:00Z',
-    partySize: resource.capacity,
+    startTime: reservationStartTime,
+    endTime: reservationEndTime,
+    partySize: testResource.capacity,
     ...overrides,
   };
 
   const reservation = await createReservation({
-    userId: user.id,
+    userId: testUser.id,
     reservationData: testReservationData,
   });
 
+  let cancelledReservation;
+  if (cancelled) {
+    cancelledReservation = await db.query(
+      `
+        UPDATE reservations
+        SET status = 'cancelled',
+          cancelled_at = NOW()
+        WHERE id = $1
+        RETURNING 
+          status,
+          cancelled_at
+      `,
+      [reservation.id],
+    );
+  }
+
+  let completedReservation;
+  if (completed) {
+    completedReservation = await db.query(
+      `
+        UPDATE reservations
+        SET status = 'completed',
+          system_completed_at = NOW()
+        WHERE id = $1
+        RETURNING 
+          status,
+          system_completed_at
+      `,
+      [reservation.id],
+    );
+  }
+
+  let status = reservation.status;
+
+  if (cancelled) status = cancelledReservation.rows[0].status;
+  if (completed) status = completedReservation.rows[0].status;
+
   return {
     ...reservation,
-    user,
-    resource,
+    status,
+    cancelled_at: cancelled
+      ? cancelledReservation.rows[0].cancelled_at
+      : reservation.cancelled_at,
+    system_completed_at: completed
+      ? completedReservation.rows[0].system_completed_at
+      : reservation.system_completed_at,
+    user: testUser,
+    resource: testResource,
     availabilityWindow: testWindow,
   };
 }

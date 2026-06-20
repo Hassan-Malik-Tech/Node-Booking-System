@@ -41,3 +41,6 @@ export const getAllowedDurationByDurationIdAndWindowId =
 
 export const softDeleteAvailabilityWindowsByResourceId =
   sqlAvailabilityWindowQueries.softDeleteAvailabilityWindowsByResourceId;
+
+export const getAllowedDurationByWindowIdAndMinutes =
+  sqlAvailabilityWindowQueries.getAllowedDurationByWindowIdAndMinutes;

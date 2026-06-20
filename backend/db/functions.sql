@@ -143,7 +143,7 @@ END;
 $$;
 
 ----------------------------------------------------------------
--- Others
+-- Miscellaneous
 ----------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION max_number_of_durations_for_window()

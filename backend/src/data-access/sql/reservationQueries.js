@@ -152,14 +152,22 @@ export async function createReservation({
   return result.rows[0];
 }
 
-export async function cancelReservationById({ reservationId, client = db }) {
+export async function cancelReservationById({
+  reservationId,
+  futureOnly = false,
+  client = db,
+}) {
   const sql = `
     UPDATE reservations
     SET status = 'cancelled',
       cancelled_at = NOW()
     WHERE id = $1
       AND status = 'active'
-    RETURNING id
+      ${futureOnly ? 'AND start_time > NOW()' : ''}
+    RETURNING 
+      id,
+      status,
+      cancelled_at
   `;
 
   const result = await client.query(sql, [reservationId]);
@@ -198,4 +206,170 @@ export async function getFutureActiveReservationsByWindowId({
   const result = await client.query(sql, [windowId]);
 
   return result.rows;
+}
+
+// This retry check is useful for reservations because an overlap conflict
+// could mean either this user already booked the exact reservation or another
+// user's reservation is blocking the slot. For resources/windows, duplicate
+// conflicts are less ambiguous because those rows belong to the current owner,
+// not to another user competing for the same slot.
+export async function getReservationAlreadyBookedByUser({
+  authUserId,
+  reservationData,
+  client = db,
+}) {
+  const { resourceId, availabilityWindowId, startTime, endTime, partySize } =
+    reservationData;
+
+  const sql = `
+    SELECT
+      id,
+      user_id,
+      resource_id,
+      availability_window_id,
+      start_time,
+      end_time,
+      party_size,
+      status,
+      staff_completed_by_user_id,
+      system_completed_at,
+      staff_completed_at,
+      cancelled_at,
+      created_at,
+      updated_at
+    FROM reservations
+    WHERE user_id = $1
+      AND resource_id = $2
+      AND availability_window_id = $3
+      AND start_time = $4
+      AND end_time = $5
+      AND party_size = $6
+      AND status = 'active'
+  `;
+
+  const result = await client.query(sql, [
+    authUserId,
+    resourceId,
+    availabilityWindowId,
+    startTime,
+    endTime,
+    partySize,
+  ]);
+
+  return result.rows[0] ?? null;
+}
+
+export async function getReservationById({
+  reservationId,
+  futureAndCurrentActive = false,
+  futureActiveOnly = false,
+  forUpdate = false,
+  client = db,
+}) {
+  if (futureActiveOnly && futureAndCurrentActive) {
+    throw new Error(
+      'You cannot filter by both futureActiveOnly and futureAndCurrentActive at the same time.',
+    );
+  }
+
+  const sql = `
+    SELECT
+      id,
+      user_id,
+      resource_id,
+      availability_window_id,
+      start_time,
+      end_time,
+      party_size,
+      status,
+      staff_completed_by_user_id,
+      system_completed_at,
+      staff_completed_at,
+      cancelled_at,
+      created_at,
+      updated_at
+    FROM reservations
+    WHERE id = $1
+    ${futureAndCurrentActive ? "AND status = 'active' AND end_time > NOW() " : ''}
+    ${futureActiveOnly ? "AND status = 'active' AND start_time > NOW() " : ''}
+    ${forUpdate ? 'FOR UPDATE' : ''}
+  `;
+
+  const result = await client.query(sql, [reservationId]);
+
+  return result.rows[0] ?? null;
+}
+
+export async function completeOngoingOrExpiredReservationByStaff({
+  reservationId,
+  staffUserId,
+  client = db,
+}) {
+  const sql = `
+    UPDATE reservations
+    SET status = 'completed',
+      staff_completed_at = NOW(),
+      staff_completed_by_user_id = $1
+    WHERE id = $2
+      AND status = 'active'
+      AND start_time <= NOW()
+    RETURNING
+      id,
+      user_id,
+      resource_id,
+      availability_window_id,
+      start_time,
+      end_time,
+      party_size,
+      status,
+      staff_completed_by_user_id,
+      system_completed_at,
+      staff_completed_at,
+      cancelled_at,
+      created_at,
+      updated_at
+  `;
+
+  const result = await client.query(sql, [staffUserId, reservationId]);
+
+  return result.rows[0] ?? null;
+}
+
+export async function updateFutureReservationPartySize({
+  reservationId,
+  authUserId,
+  partySize,
+  client = db,
+}) {
+  const sql = `
+    UPDATE reservations
+    SET party_size = $1
+    WHERE id = $2
+      AND user_id = $3
+      AND status = 'active'
+      AND start_time > NOW()
+    RETURNING
+      id,
+      user_id,
+      resource_id,
+      availability_window_id,
+      start_time,
+      end_time,
+      party_size,
+      status,
+      staff_completed_by_user_id,
+      system_completed_at,
+      staff_completed_at,
+      cancelled_at,
+      created_at,
+      updated_at
+  `;
+
+  const result = await client.query(sql, [
+    partySize,
+    reservationId,
+    authUserId,
+  ]);
+
+  return result.rows[0] ?? null;
 }
