@@ -5,8 +5,8 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
-       AND (name = 'Meeting Room 1') 
+       (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_1') AND (deleted_at IS NULL)))
+       AND (name = 'active-resource-1') 
        AND (deleted_at IS NULL)
     ),
     (
@@ -15,15 +15,15 @@ VALUES
        (resource_id = (
          SELECT id FROM resources
          WHERE
-          (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
-          AND (name = 'Meeting Room 1')
+          (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_1') AND (deleted_at IS NULL)))
+          AND (name = 'active-resource-1')
           AND (deleted_at IS NULL)
        ))
        AND (start_time = '2036-03-20T9:00:00Z')
        AND (end_time = '2036-03-20T17:00:00Z')
        AND (deleted_at IS NULL)
     ),
-    (SELECT id FROM users WHERE (username = 'active_booking_user1') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'dev_username_4') AND (deleted_at IS NULL) ),
     NULL,
     '2036-03-20T9:00:00Z',
     '2036-03-20T9:15:00Z',
@@ -37,8 +37,8 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
-       AND (name = 'Meeting Room 1') 
+       (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_1') AND (deleted_at IS NULL)))
+       AND (name = 'active-resource-1') 
        AND (deleted_at IS NULL)
     ),
     (
@@ -47,15 +47,15 @@ VALUES
        (resource_id = (
          SELECT id FROM resources
          WHERE
-          (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
-          AND (name = 'Meeting Room 1')
+          (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_1') AND (deleted_at IS NULL)))
+          AND (name = 'active-resource-1')
           AND (deleted_at IS NULL)
        ))
        AND (start_time = '2036-03-20T9:00:00Z')
        AND (end_time = '2036-03-20T17:00:00Z')
        AND (deleted_at IS NULL)
     ),
-    (SELECT id FROM users WHERE (username = 'active_booking_user2') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'dev_username_5') AND (deleted_at IS NULL) ),
     NULL,
     '2036-03-20T9:15:00Z',
     '2036-03-20T10:00:00Z',
@@ -71,8 +71,8 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
-       AND (name = 'Meeting Room 1') 
+       (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_1') AND (deleted_at IS NULL)))
+       AND (name = 'active-resource-1') 
        AND (deleted_at IS NULL)
     ),
     (
@@ -81,15 +81,15 @@ VALUES
        (resource_id = (
          SELECT id FROM resources
          WHERE
-          (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
-          AND (name = 'Meeting Room 1')
+          (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_1') AND (deleted_at IS NULL)))
+          AND (name = 'active-resource-1')
           AND (deleted_at IS NULL)
        ))
        AND (start_time = '2036-03-24T9:00:00Z')
        AND (end_time = '2036-03-24T17:00:00Z')
        AND (deleted_at IS NULL)
     ),
-    (SELECT id FROM users WHERE (username = 'active_booking_user1') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'dev_username_4') AND (deleted_at IS NULL) ),
     NULL,
     '2036-03-24T10:00:00Z',
     '2036-03-24T10:45:00Z',
@@ -103,8 +103,8 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
-       AND (name = 'Meeting Room 1') 
+       (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_1') AND (deleted_at IS NULL)))
+       AND (name = 'active-resource-1') 
        AND (deleted_at IS NULL)
     ),
     (
@@ -113,15 +113,15 @@ VALUES
        (resource_id = (
          SELECT id FROM resources
          WHERE
-          (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
-          AND (name = 'Meeting Room 1')
+          (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_1') AND (deleted_at IS NULL)))
+          AND (name = 'active-resource-1')
           AND (deleted_at IS NULL)
        ))
        AND (start_time = '2036-03-24T9:00:00Z')
        AND (end_time = '2036-03-24T17:00:00Z')
        AND (deleted_at IS NULL)
     ),
-    (SELECT id FROM users WHERE (username = 'active_booking_user2') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'dev_username_5') AND (deleted_at IS NULL) ),
     NULL,
     '2036-03-24T10:00:00Z',
     '2036-03-24T10:45:00Z',
@@ -137,8 +137,8 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner2') AND (deleted_at IS NULL)))
-       AND (name = 'Meeting Room 1') 
+       (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_2') AND (deleted_at IS NULL)))
+       AND (name = 'active-resource-2') 
        AND (deleted_at IS NULL)
     ),
     (
@@ -147,15 +147,15 @@ VALUES
        (resource_id = (
          SELECT id FROM resources
          WHERE
-          (owner_id = (SELECT id FROM users WHERE (username = 'active_owner2') AND (deleted_at IS NULL)))
-          AND (name = 'Meeting Room 1')
+          (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_2') AND (deleted_at IS NULL)))
+          AND (name = 'active-resource-2')
           AND (deleted_at IS NULL)
        ))
        AND (start_time = '2036-06-24T10:00:00Z')
        AND (end_time = '2036-06-24T12:00:00Z')
        AND (deleted_at IS NULL)
     ),
-    (SELECT id FROM users WHERE (username = 'active_booking_user1') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'dev_username_4') AND (deleted_at IS NULL) ),
     NULL,
     '2036-06-24T10:00:00Z',
     '2036-06-24T11:15:00Z',
@@ -171,8 +171,8 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner2') AND (deleted_at IS NULL)))
-       AND (name = 'Meeting Room 1') 
+       (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_2') AND (deleted_at IS NULL)))
+       AND (name = 'active-resource-2') 
        AND (deleted_at IS NULL)
     ),
     (
@@ -181,15 +181,15 @@ VALUES
        (resource_id = (
          SELECT id FROM resources
          WHERE
-          (owner_id = (SELECT id FROM users WHERE (username = 'active_owner2') AND (deleted_at IS NULL)))
-          AND (name = 'Meeting Room 1')
+          (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_2') AND (deleted_at IS NULL)))
+          AND (name = 'active-resource-2')
           AND (deleted_at IS NULL)
        ))
        AND (start_time = '2036-06-24T14:30:00Z')
        AND (end_time = '2036-06-24T16:30:00Z')
        AND (deleted_at IS NULL)
     ),
-    (SELECT id FROM users WHERE (username = 'active_booking_user2') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'dev_username_5') AND (deleted_at IS NULL) ),
     NULL,
     '2036-06-24T14:45:00Z',
     '2036-06-24T16:00:00Z',
@@ -205,8 +205,8 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
-       AND (name = 'Basket Ball Court') 
+       (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_1') AND (deleted_at IS NULL)))
+       AND (name = 'active-resource-4') 
        AND (deleted_at IS NULL)
     ),
     (
@@ -215,15 +215,15 @@ VALUES
        (resource_id = (
          SELECT id FROM resources
          WHERE
-          (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
-          AND (name = 'Basket Ball Court')
+          (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_1') AND (deleted_at IS NULL)))
+          AND (name = 'active-resource-4')
           AND (deleted_at IS NULL)
        ))
        AND (start_time = '2035-06-22T13:00:00Z')
        AND (end_time = '2035-06-22T16:00:00Z')
        AND (deleted_at IS NULL)
     ),
-    (SELECT id FROM users WHERE (username = 'active_booking_user1') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'dev_username_4') AND (deleted_at IS NULL) ),
     NULL,
     '2035-06-22T14:00:00Z',
     '2035-06-22T15:15:00Z',
@@ -239,8 +239,8 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner2') AND (deleted_at IS NULL)))
-       AND (name = 'Tennis Court') 
+       (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_2') AND (deleted_at IS NULL)))
+       AND (name = 'active-resource-5') 
        AND (deleted_at IS NULL)
     ),
     (
@@ -249,16 +249,16 @@ VALUES
        (resource_id = (
          SELECT id FROM resources
          WHERE
-          (owner_id = (SELECT id FROM users WHERE (username = 'active_owner2') AND (deleted_at IS NULL)))
-          AND (name = 'Tennis Court')
+          (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_2') AND (deleted_at IS NULL)))
+          AND (name = 'active-resource-5')
           AND (deleted_at IS NULL)
        ))
        AND (start_time = '2025-01-24T10:30:00Z')
        AND (end_time = '2025-01-24T12:30:00Z')
        AND (deleted_at IS NULL)
     ),
-    (SELECT id FROM users WHERE (username = 'active_booking_user2') AND (deleted_at IS NULL) ),
-    (SELECT id FROM users WHERE (username = 'bob_username') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'dev_username_5') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'employee_username_1') AND (deleted_at IS NULL) ),
     '2025-01-24T10:30:00Z',
     '2025-01-24T11:15:00Z',
     'completed',
@@ -271,8 +271,8 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner2') AND (deleted_at IS NULL)))
-       AND (name = 'Tennis Court') 
+       (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_2') AND (deleted_at IS NULL)))
+       AND (name = 'active-resource-5') 
        AND (deleted_at IS NULL)
     ),
     (
@@ -281,16 +281,16 @@ VALUES
        (resource_id = (
          SELECT id FROM resources
          WHERE
-          (owner_id = (SELECT id FROM users WHERE (username = 'active_owner2') AND (deleted_at IS NULL)))
-          AND (name = 'Tennis Court')
+          (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_2') AND (deleted_at IS NULL)))
+          AND (name = 'active-resource-5')
           AND (deleted_at IS NULL)
        ))
        AND (start_time = '2025-01-24T10:30:00Z')
        AND (end_time = '2025-01-24T12:30:00Z')
        AND (deleted_at IS NULL)
     ),
-    (SELECT id FROM users WHERE (username = 'active_booking_user1') AND (deleted_at IS NULL) ),
-    (SELECT id FROM users WHERE (username = 'bob_username') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'dev_username_4') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'employee_username_1') AND (deleted_at IS NULL) ),
     '2025-01-24T11:15:00Z',
     '2025-01-24T12:00:00Z',
     'completed',
@@ -303,8 +303,8 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner2') AND (deleted_at IS NULL)))
-       AND (name = 'Tennis Court') 
+       (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_2') AND (deleted_at IS NULL)))
+       AND (name = 'active-resource-5') 
        AND (deleted_at IS NULL)
     ),
     (
@@ -313,15 +313,15 @@ VALUES
        (resource_id = (
          SELECT id FROM resources
          WHERE
-          (owner_id = (SELECT id FROM users WHERE (username = 'active_owner2') AND (deleted_at IS NULL)))
-          AND (name = 'Tennis Court')
+          (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_2') AND (deleted_at IS NULL)))
+          AND (name = 'active-resource-5')
           AND (deleted_at IS NULL)
        ))
        AND (start_time = '2025-01-24T10:30:00Z')
        AND (end_time = '2025-01-24T12:30:00Z')
        AND (deleted_at IS NULL)
     ),
-    (SELECT id FROM users WHERE (username = 'active_booking_user2') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'dev_username_5') AND (deleted_at IS NULL) ),
     NULL,
     '2025-01-24T12:00:00Z',
     '2025-01-24T12:15:00Z',
@@ -335,8 +335,8 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner2') AND (deleted_at IS NULL)))
-       AND (name = 'Tennis Court') 
+       (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_2') AND (deleted_at IS NULL)))
+       AND (name = 'active-resource-5') 
        AND (deleted_at IS NULL)
     ),
     (
@@ -345,16 +345,16 @@ VALUES
        (resource_id = (
          SELECT id FROM resources
          WHERE
-          (owner_id = (SELECT id FROM users WHERE (username = 'active_owner2') AND (deleted_at IS NULL)))
-          AND (name = 'Tennis Court')
+          (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_2') AND (deleted_at IS NULL)))
+          AND (name = 'active-resource-5')
           AND (deleted_at IS NULL)
        ))
        AND (start_time = '2025-01-24T10:30:00Z')
        AND (end_time = '2025-01-24T12:30:00Z')
        AND (deleted_at IS NULL)
     ),
-    (SELECT id FROM users WHERE (username = 'active_booking_user1') AND (deleted_at IS NULL) ),
-    (SELECT id FROM users WHERE (username = 'bob_username') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'dev_username_4') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'employee_username_1') AND (deleted_at IS NULL) ),
     '2025-01-24T12:15:00Z',
     '2025-01-24T12:30:00Z',
     'completed',
@@ -369,8 +369,8 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner2') AND (deleted_at IS NULL)))
-       AND (name = 'Tennis Court') 
+       (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_2') AND (deleted_at IS NULL)))
+       AND (name = 'active-resource-5') 
        AND (deleted_at IS NULL)
     ),
     (
@@ -379,15 +379,15 @@ VALUES
        (resource_id = (
          SELECT id FROM resources
          WHERE
-          (owner_id = (SELECT id FROM users WHERE (username = 'active_owner2') AND (deleted_at IS NULL)))
-          AND (name = 'Tennis Court')
+          (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_2') AND (deleted_at IS NULL)))
+          AND (name = 'active-resource-5')
           AND (deleted_at IS NULL)
        ))
        AND (start_time = '2025-02-26T10:30:00Z')
        AND (end_time = '2025-02-26T12:30:00Z')
        AND (deleted_at IS NULL)
     ),
-    (SELECT id FROM users WHERE (username = 'active_booking_user2') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'dev_username_5') AND (deleted_at IS NULL) ),
     NULL,
     '2025-02-26T10:30:00Z',
     '2025-02-26T11:45:00Z',
@@ -401,8 +401,8 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner2') AND (deleted_at IS NULL)))
-       AND (name = 'Tennis Court') 
+       (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_2') AND (deleted_at IS NULL)))
+       AND (name = 'active-resource-5') 
        AND (deleted_at IS NULL)
     ),
     (
@@ -411,16 +411,16 @@ VALUES
        (resource_id = (
          SELECT id FROM resources
          WHERE
-          (owner_id = (SELECT id FROM users WHERE (username = 'active_owner2') AND (deleted_at IS NULL)))
-          AND (name = 'Tennis Court')
+          (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_2') AND (deleted_at IS NULL)))
+          AND (name = 'active-resource-5')
           AND (deleted_at IS NULL)
        ))
        AND (start_time = '2025-02-26T10:30:00Z')
        AND (end_time = '2025-02-26T12:30:00Z')
        AND (deleted_at IS NULL)
     ),
-    (SELECT id FROM users WHERE (username = 'active_booking_user1') AND (deleted_at IS NULL) ),
-    (SELECT id FROM users WHERE (username = 'bob_username') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'dev_username_4') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'employee_username_1') AND (deleted_at IS NULL) ),
     '2025-02-26T10:30:00Z',
     '2025-02-26T12:30:00Z',
     'completed',
@@ -435,8 +435,8 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
-       AND (name = 'Gym') 
+       (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_1') AND (deleted_at IS NULL)))
+       AND (name = 'inactive-resource-1') 
        AND (deleted_at IS NULL)
     ),
     (
@@ -445,16 +445,16 @@ VALUES
        (resource_id = (
          SELECT id FROM resources
          WHERE
-          (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
-          AND (name = 'Gym')
+          (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_1') AND (deleted_at IS NULL)))
+          AND (name = 'inactive-resource-1')
           AND (deleted_at IS NULL)
        ))
        AND (start_time = '2022-06-22T14:00:00Z')
        AND (end_time = '2022-06-22T16:00:00Z')
        AND (deleted_at IS NULL)
     ),
-    (SELECT id FROM users WHERE (username = 'active_booking_user1') AND (deleted_at IS NULL) ),
-    (SELECT id FROM users WHERE (username = 'bob_username') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'dev_username_4') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'employee_username_1') AND (deleted_at IS NULL) ),
     '2022-06-22T14:00:00Z',
     '2022-06-22T14:45:00Z',
     'completed',
@@ -469,8 +469,8 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
-       AND (name = 'Gym') 
+       (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_1') AND (deleted_at IS NULL)))
+       AND (name = 'inactive-resource-1') 
        AND (deleted_at IS NULL)
     ),
     (
@@ -479,15 +479,15 @@ VALUES
        (resource_id = (
          SELECT id FROM resources
          WHERE
-          (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
-          AND (name = 'Gym')
+          (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_1') AND (deleted_at IS NULL)))
+          AND (name = 'inactive-resource-1')
           AND (deleted_at IS NULL)
        ))
        AND (start_time = '2037-06-22T14:00:00Z')
        AND (end_time = '2037-06-22T16:00:00Z')
        AND (deleted_at = '2026-01-22T16:00:00Z')
     ),
-    (SELECT id FROM users WHERE (username = 'active_booking_user2') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'dev_username_5') AND (deleted_at IS NULL) ),
     NULL,
     '2037-06-22T14:00:00Z',
     '2037-06-22T15:00:00Z',
@@ -503,8 +503,8 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
-       AND (name = 'Meeting Room 1') 
+       (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_1') AND (deleted_at IS NULL)))
+       AND (name = 'deleted-resource-1') 
        AND (deleted_at = '2026-02-24T9:00:00Z')
     ),
     (
@@ -513,15 +513,15 @@ VALUES
        (resource_id = (
          SELECT id FROM resources
          WHERE
-          (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
-          AND (name = 'Meeting Room 1')
+          (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_1') AND (deleted_at IS NULL)))
+          AND (name = 'deleted-resource-1')
           AND (deleted_at = '2026-02-24T9:00:00Z')
        ))
        AND (start_time = '2037-06-22T14:00:00Z')
        AND (end_time = '2037-06-22T16:00:00Z')
        AND (deleted_at = '2026-02-24T9:00:00Z')
     ),
-    (SELECT id FROM users WHERE (username = 'active_booking_user1') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'dev_username_4') AND (deleted_at IS NULL) ),
     NULL,
     '2037-06-22T15:00:00Z',
     '2037-06-22T16:00:00Z',
@@ -537,8 +537,8 @@ VALUES
     (
       SELECT id FROM resources 
       WHERE 
-       (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
-       AND (name = 'Meeting Room 1') 
+       (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_1') AND (deleted_at IS NULL)))
+       AND (name = 'deleted-resource-1') 
        AND (deleted_at = '2026-02-24T9:00:00Z')
     ),
     (
@@ -547,16 +547,16 @@ VALUES
        (resource_id = (
          SELECT id FROM resources
          WHERE
-          (owner_id = (SELECT id FROM users WHERE (username = 'active_owner1') AND (deleted_at IS NULL)))
-          AND (name = 'Meeting Room 1')
+          (owner_id = (SELECT id FROM users WHERE (username = 'dev_username_1') AND (deleted_at IS NULL)))
+          AND (name = 'deleted-resource-1')
           AND (deleted_at = '2026-02-24T9:00:00Z')
        ))
        AND (start_time = '2026-01-22T14:00:00Z')
        AND (end_time = '2026-01-22T16:00:00Z')
        AND (deleted_at IS NULL)
     ),
-    (SELECT id FROM users WHERE (username = 'active_booking_user2') AND (deleted_at IS NULL) ),
-    (SELECT id FROM users WHERE (username = 'bob_username') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'dev_username_5') AND (deleted_at IS NULL) ),
+    (SELECT id FROM users WHERE (username = 'employee_username_1') AND (deleted_at IS NULL) ),
     '2026-01-22T14:00:00Z',
     '2026-01-22T15:00:00Z',
     'completed',

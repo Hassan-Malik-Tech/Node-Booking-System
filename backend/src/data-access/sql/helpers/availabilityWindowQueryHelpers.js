@@ -36,15 +36,9 @@ export function buildAvailabilityWindowsWhereClause({
     conditions.push(`r.owner_id = $${values.length}`);
   }
 
-  // If status is all and there is no ownerId then conditions is empty.
-  // WHERE TRUE is a harmless fall back to avoid just WHERE which is invalid sql.
-  // WHERE TRUE means return all rows.
-  const whereClause = conditions.length > 0 ? conditions.join(' AND ') : 'TRUE';
-
   return {
-    whereClause,
+    whereClause: conditions.length > 0 ? conditions.join(' AND ') : 'TRUE',
     ownerIdJoinClause,
     values,
   };
 }
-

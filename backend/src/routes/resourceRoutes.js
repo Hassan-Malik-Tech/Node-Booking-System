@@ -7,7 +7,7 @@ import {
   resourceByIdParamsSchema,
   createResourceBodySchema,
   updateResourceBodySchema,
-  listResourcesForManagementQuerySchema,
+  listResourcesForStaffQuerySchema,
 } from '../validators/resourceSchemas.js';
 import {
   createAvailabilityWindowBodySchema,
@@ -52,11 +52,11 @@ resourcesRouter.get(
   requireRole(['employee', 'admin']),
   validateRequest({
     query: {
-      schema: listResourcesForManagementQuerySchema,
+      schema: listResourcesForStaffQuerySchema,
       errorMessage: 'Invalid resource management list query.',
     },
   }),
-  resourceController.listResourcesForManagement,
+  resourceController.listResourcesForStaff,
 );
 
 resourcesRouter.get(
@@ -70,7 +70,7 @@ resourcesRouter.get(
       errorMessage: 'Invalid resource id parameter.',
     },
   }),
-  resourceController.getResourceByIdForManagement,
+  resourceController.getResourceByIdForStaff,
 );
 
 resourcesRouter.get(

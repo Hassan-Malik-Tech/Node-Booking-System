@@ -339,7 +339,7 @@ describe('/api/availability-windows', () => {
       describe('returns 401 INVALID_TOKEN with correct response', () => {
         test('when token user is soft deleted', async () => {
           const { user, accessToken } = await createAuthenticatedTestUser({
-            role: 'admin',
+            role: 'employee',
           });
 
           const deletedUser = await softDeleteTestUser(user.id);
@@ -447,7 +447,7 @@ describe('/api/availability-windows', () => {
             response,
             errorMessage: 'Invalid availability window list query.',
             field: 'ownerId',
-            detailsMessage: 'Owner id must be at least 1.',
+            detailsMessage: 'Resource owner id must be at least 1.',
           });
         });
 

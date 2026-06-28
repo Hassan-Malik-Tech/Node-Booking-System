@@ -1,31 +1,31 @@
 import * as db from '../../db/db.js';
 import {
   buildActiveResourcesWhereClause,
-  buildResourcesForManagementWhereClause,
+  buildResourcesForStaffWhereClause,
 } from './helpers/resourceQueryHelpers.js';
 import {
   getOrderByParts,
   buildSetClause,
 } from './helpers/commonQueryHelpers.js';
 
-const MANAGEMENT_RESOURCE_SORT_COLUMNS = {
+const STAFF_RESOURCE_SORT_COLUMNS = {
   createdAt: 'created_at',
   updatedAt: 'updated_at',
   name: 'name',
 };
 
-export async function listResourcesForManagement(filters) {
+export async function listResourcesForStaff(filters) {
   const {
     limit,
     offset,
     search,
-    sortBy,
-    sortDirection,
+    sortBy = 'createdAt',
+    sortDirection = 'desc',
     ownerId,
     status = 'active',
   } = filters;
 
-  const { whereClause, values } = buildResourcesForManagementWhereClause({
+  const { whereClause, values } = buildResourcesForStaffWhereClause({
     status,
     search,
     ownerId,
@@ -34,7 +34,7 @@ export async function listResourcesForManagement(filters) {
   const { orderByColumn, direction } = getOrderByParts({
     sortBy,
     sortDirection,
-    allowList: MANAGEMENT_RESOURCE_SORT_COLUMNS,
+    allowList: STAFF_RESOURCE_SORT_COLUMNS,
   });
 
   values.push(limit);
@@ -66,10 +66,10 @@ export async function listResourcesForManagement(filters) {
   return result.rows;
 }
 
-export async function countResourcesForManagement(filters) {
+export async function countResourcesForStaff(filters) {
   const { status = 'active', search, ownerId } = filters;
 
-  const { whereClause, values } = buildResourcesForManagementWhereClause({
+  const { whereClause, values } = buildResourcesForStaffWhereClause({
     status,
     search,
     ownerId,
@@ -85,6 +85,15 @@ export async function countResourcesForManagement(filters) {
   const result = await db.query(sql, values);
 
   return result.rows[0].total;
+}
+
+// Same functions as staff but forced ownerId in the service.
+export async function listResourcesForOwner(filters) {
+  return listResourcesForStaff(filters);
+}
+
+export async function countResourcesForOwner(filters) {
+  return countResourcesForStaff(filters);
 }
 
 const PUBLIC_RESOURCE_SORT_COLUMNS = {
@@ -316,4 +325,20 @@ export async function deactivateResource({ resourceId, client = db }) {
   const result = await client.query(sql, [resourceId]);
 
   return result.rows[0] ?? null;
+}
+
+export async function softDeleteResourcesByOwnerId({ ownerId, client = db }) {
+  const sql = `
+    UPDATE resources
+    SET deleted_at = NOW(),
+      is_active = FALSE
+    WHERE owner_id = $1
+      AND deleted_at IS NULL
+    RETURNING
+      id
+  `;
+
+  const result = await client.query(sql, [ownerId]);
+
+  return result.rows.map((row) => row.id);
 }

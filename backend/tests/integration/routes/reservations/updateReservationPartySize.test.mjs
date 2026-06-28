@@ -20,6 +20,7 @@ import {
   expectReservationNotFoundResponse,
   expectReservationAlreadyCompletedResponse,
   expectReservationAlreadyCancelledResponse,
+  expectNoDetailsErrorResponse,
 } from '../../../helpers/assertions.mjs';
 import { softDeleteTestUser } from '../../../helpers/updateTestData.mjs';
 import * as db from '../../../../src/db/db.js';
@@ -230,13 +231,11 @@ describe('/api/reservations', () => {
               partySize: reservation.party_size,
             });
 
-          expect(response.status).toBe(409);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'RESERVATION_ALREADY_ENDED',
-              message: 'Cannot update party size for a past reservation.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 409,
+            code: 'RESERVATION_ALREADY_ENDED',
+            message: 'Cannot update party size for a past reservation.',
           });
         });
       });
@@ -257,14 +256,11 @@ describe('/api/reservations', () => {
               partySize: reservation.party_size,
             });
 
-          expect(response.status).toBe(409);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'RESERVATION_ALREADY_STARTED',
-              message:
-                'Cannot update party size for a reservation that has already started.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 409,
+            code: 'RESERVATION_ALREADY_STARTED',
+            message: 'Cannot update party size for a reservation that has already started.',
           });
         });
       });
@@ -292,14 +288,11 @@ describe('/api/reservations', () => {
               partySize: reservation.party_size,
             });
 
-          expect(response.status).toBe(409);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'RESOURCE_STATE_CHANGED',
-              message:
-                'You can no longer update this reservation because the resource is no longer bookable.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 409,
+            code: 'RESOURCE_STATE_CHANGED',
+            message: 'You can no longer update this reservation because the resource is no longer bookable.',
           });
         });
 
@@ -323,14 +316,11 @@ describe('/api/reservations', () => {
               partySize: reservation.party_size,
             });
 
-          expect(response.status).toBe(409);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'RESOURCE_STATE_CHANGED',
-              message:
-                'You can no longer update this reservation because the resource is no longer bookable.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 409,
+            code: 'RESOURCE_STATE_CHANGED',
+            message: 'You can no longer update this reservation because the resource is no longer bookable.',
           });
         });
       });
@@ -359,14 +349,11 @@ describe('/api/reservations', () => {
               partySize: reservation.party_size,
             });
 
-          expect(response.status).toBe(409);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'AVAILABILITY_WINDOW_STATE_CHANGED',
-              message:
-                'You can no longer update this reservation because the availability window is no longer bookable.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 409,
+            code: 'AVAILABILITY_WINDOW_STATE_CHANGED',
+            message: 'You can no longer update this reservation because the availability window is no longer bookable.',
           });
         });
       });
@@ -389,13 +376,11 @@ describe('/api/reservations', () => {
               partySize: newPartySize,
             });
 
-          expect(response.status).toBe(400);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'RESERVATION_PARTY_SIZE_EXCEEDS_CAPACITY',
-              message: `Reservation party size cannot exceed resource capacity of ${resourceCapacity}.`,
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 400,
+            code: 'RESERVATION_PARTY_SIZE_EXCEEDS_CAPACITY',
+            message: `Reservation party size cannot exceed resource capacity of ${resourceCapacity}.`,
           });
         });
       });

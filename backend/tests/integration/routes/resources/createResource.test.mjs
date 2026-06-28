@@ -15,6 +15,7 @@ import {
   expectValidationErrorResponse,
   expectAvailabilityWindowConflictResponse,
   expectAllowedDurationLongerThanWindowResponse,
+  expectNoDetailsErrorResponse,
 } from '../../../helpers/assertions.mjs';
 import { softDeleteTestUser } from '../../../helpers/updateTestData.mjs';
 import {
@@ -173,13 +174,11 @@ describe('/api/resources', () => {
               }),
             );
 
-          expect(response.status).toBe(409);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'RESOURCE_NAME_ALREADY_EXISTS_FOR_OWNER',
-              message: 'Resource name is already in use for this owner',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 409,
+            code: 'RESOURCE_NAME_ALREADY_EXISTS_FOR_OWNER',
+            message: 'Resource name is already in use for this owner',
           });
         });
       });

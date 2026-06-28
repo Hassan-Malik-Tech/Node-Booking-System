@@ -1,21 +1,33 @@
 import * as db from '../../db/db.js';
-import { buildActiveUsersWhereClause } from './helpers/userQueryHelpers.js';
+import { buildUsersWhereClause } from './helpers/userQueryHelpers.js';
 import { getOrderByParts } from './helpers/commonQueryHelpers.js';
 import { buildSetClause } from './helpers/commonQueryHelpers.js';
 
 const USER_SORT_COLUMNS = {
   createdAt: 'created_at',
+  updatedAt: 'updated_at',
+  deletedAt: 'deleted_at',
   username: 'username',
   email: 'email',
   role: 'role',
-}; // enum style allow list for sortBy API to SQL conversion
+};
 
-export async function listActiveUsers(filters) {
-  const { limit, offset, role, search, sortBy, sortDirection } = filters;
-  // destructures the validated/defaulted filter object
-  // for this length, I prefer destructuring it outside of the parameters
+export async function listUsersForStaff(filters) {
+  const {
+    limit,
+    offset,
+    sortBy = 'createdAt',
+    sortDirection = 'desc',
+    status = 'active',
+    role = 'all',
+    search,
+  } = filters;
 
-  const { values, whereClause } = buildActiveUsersWhereClause({ role, search });
+  const { values, whereClause } = buildUsersWhereClause({
+    role,
+    search,
+    status,
+  });
 
   const { orderByColumn, direction } = getOrderByParts({
     sortBy,
@@ -23,7 +35,13 @@ export async function listActiveUsers(filters) {
     allowList: USER_SORT_COLUMNS,
   });
 
-  values.push(limit); // limit(pageSize) and offset are either client values or defaults from validation
+  // If someone wants to sort by deletedAt then they probably dont want
+  // to see deletedAt: null at the top as they would want to see deleted
+  // users not active.
+  const nullsLast =
+    sortBy === 'deletedAt' && status === 'all' ? 'NULLS LAST' : '';
+
+  values.push(limit);
   const limitPlaceholder = `$${values.length}`;
 
   values.push(offset);
@@ -37,10 +55,11 @@ export async function listActiveUsers(filters) {
       email,
       role,
       created_at,
-      updated_at
+      updated_at,
+      deleted_at
     FROM users
     WHERE ${whereClause}
-    ORDER BY ${orderByColumn} ${direction}, id DESC
+    ORDER BY ${orderByColumn} ${direction} ${nullsLast}, id DESC
     LIMIT ${limitPlaceholder}
     OFFSET ${offsetPlaceholder}
   `;
@@ -48,17 +67,16 @@ export async function listActiveUsers(filters) {
   const result = await db.query(sql, values);
 
   return result.rows;
-} // for  GET '/api/users'
+}
 
-// ex or GET request:
-// GET /api/users?page=1&pageSize=10&role=user&search=ali&sortBy=createdAt&sortDirection=desc
+export async function countUsersForStaff(filters) {
+  const { role = 'all', search, status = 'active' } = filters;
 
-export async function countActiveUsers(filters) {
-  const { role, search } = filters;
-  // just to make it consistent,
-  // it could easily go in the parameters instead
-
-  const { values, whereClause } = buildActiveUsersWhereClause({ role, search });
+  const { values, whereClause } = buildUsersWhereClause({
+    role,
+    search,
+    status,
+  });
 
   const sql = `
     SELECT
@@ -66,20 +84,13 @@ export async function countActiveUsers(filters) {
     FROM users
     WHERE ${whereClause}
   `;
-  // COUNT(*) returns bigint which can possibly go higher than the js max number storage,
-  // so without ::int the total may come back as a string instead of a number.
-
-  // :: is the cast operator, ::int converts COUNT(*) into int
-  // it is short for CAST(COUNT(*) AS int)
 
   const result = await db.query(sql, values);
 
   return result.rows[0].total;
-} // this function is for pagination info for '/api/users'
+}
 
-// returns token_version because my test functions use this
-// to create new users and sign them, signing requires token_version.
-export async function createUserForRegistration(userData) {
+export async function createUser(userData) {
   const { username, passwordHash, name = null, email } = userData;
 
   const sql = `
@@ -93,7 +104,8 @@ export async function createUserForRegistration(userData) {
       role,
       token_version,
       created_at,
-      updated_at
+      updated_at,
+      deleted_at
   `;
 
   const result = await db.query(sql, [username, passwordHash, name, email]);
@@ -101,7 +113,40 @@ export async function createUserForRegistration(userData) {
   return result.rows[0];
 }
 
-export async function activeUsernameExists(username) {
+export async function createUserAsAdmin({ userData, client = db }) {
+  const { username, passwordHash, name = null, email, role } = userData;
+
+  if (role === 'admin') {
+    throw new Error('createUserAsAdmin cannot create admin users.');
+  }
+
+  const sql = `
+    INSERT INTO users (username, password_hash, name, email, role)
+    VALUES ($1, $2, $3, $4, $5)
+    RETURNING
+      id,
+      username,
+      name,
+      email,
+      role,
+      token_version,
+      created_at,
+      updated_at,
+      deleted_at
+  `;
+
+  const result = await client.query(sql, [
+    username,
+    passwordHash,
+    name,
+    email,
+    role,
+  ]);
+
+  return result.rows[0];
+}
+
+export async function activeUsernameExists(username, { client = db } = {}) {
   const sql = `
     SELECT EXISTS (
       SELECT 1
@@ -111,12 +156,12 @@ export async function activeUsernameExists(username) {
     ) AS exists
   `;
 
-  const result = await db.query(sql, [username]);
+  const result = await client.query(sql, [username]);
 
   return result.rows[0].exists; // returns a boolean
 }
 
-export async function activeEmailExists(email) {
+export async function activeEmailExists(email, { client = db } = {}) {
   const sql = `
     SELECT EXISTS (
       SELECT 1
@@ -126,7 +171,7 @@ export async function activeEmailExists(email) {
     ) AS exists
   `;
 
-  const result = await db.query(sql, [email]);
+  const result = await client.query(sql, [email]);
 
   return result.rows[0].exists;
 }
@@ -153,7 +198,29 @@ export async function getActiveUserByUsername(username) {
   return result.rows[0] ?? null;
 }
 
-export async function getActiveUserById(userId) {
+export async function getActiveUserByEmail({ email }) {
+  const sql = `
+    SELECT
+      id,
+      username,
+      password_hash,
+      name,
+      email,
+      role,
+      token_version,
+      created_at,
+      updated_at
+    FROM users
+    WHERE lower(email) = lower($1)
+      AND deleted_at IS NULL
+  `;
+
+  const result = await db.query(sql, [email]);
+
+  return result.rows[0] ?? null;
+}
+
+export async function getActiveUserById(userId, { client = db } = {}) {
   const sql = `
      SELECT
       id,
@@ -169,7 +236,7 @@ export async function getActiveUserById(userId) {
       AND deleted_at IS NULL
   `;
 
-  const result = await db.query(sql, [userId]);
+  const result = await client.query(sql, [userId]);
 
   return result.rows[0] ?? null;
 }
@@ -178,7 +245,9 @@ export async function lockUser({ userId, client = db }) {
   const sql = `
     SELECT
       id,
-      role
+      role,
+      username,
+      email
     FROM users
     WHERE id = $1
       AND deleted_at IS NULL
@@ -190,12 +259,21 @@ export async function lockUser({ userId, client = db }) {
   return result.rows[0] ?? null;
 }
 
-export async function updateActiveUserById({ userId, updateData }) {
-  const { username, name, email } = updateData;
+export async function updateActiveUserById({
+  userId,
+  updateData,
+  isAdminManagedUpdate = false,
+  client = db,
+}) {
+  const { username, email, name } = updateData;
 
-  const { values, setClause } = buildSetClause({ username, name, email });
+  const buildSetClauseParams = isAdminManagedUpdate
+    ? { username, name }
+    : { username, email, name };
 
-  // joi should validate the body, just an extra query gaurd.
+  const { values, setClause } = buildSetClause(buildSetClauseParams);
+
+  // joi should validate the body, just an extra query guard.
   // This may be useful if the function is called outside of the service.
   if (setClause.length === 0) {
     return null;
@@ -209,6 +287,7 @@ export async function updateActiveUserById({ userId, updateData }) {
     SET ${setClause}
     WHERE id = ${idPlaceholder}
       AND deleted_at IS NULL
+      ${isAdminManagedUpdate ? "AND role <> 'admin'" : ''}
     RETURNING
       id,
       username,
@@ -216,12 +295,12 @@ export async function updateActiveUserById({ userId, updateData }) {
       email,
       role,
       created_at,
-      updated_at
+      updated_at,
+      deleted_at
   `;
 
-  const result = await db.query(sql, values);
+  const result = await client.query(sql, values);
 
-  // deleted_at IS NULL may match no rows, so use ?? null for that situation.
   return result.rows[0] ?? null;
 }
 
@@ -240,6 +319,96 @@ export async function updatePassword({ userId, passwordHash }) {
   `;
 
   const result = await db.query(sql, [passwordHash, userId]);
+
+  return result.rows[0] ?? null;
+}
+
+export async function softDeleteUserById({ userId, client = db }) {
+  const sql = `
+    UPDATE users
+    SET deleted_at = NOW()
+    WHERE id = $1
+      AND deleted_at IS NULL
+    RETURNING
+      id,
+      username,
+      name,
+      email,
+      role,
+      created_at,
+      updated_at,
+      deleted_at
+  `;
+
+  const result = await client.query(sql, [userId]);
+
+  return result.rows[0] ?? null;
+}
+
+export async function getUserById({ userId, client = db }) {
+  const sql = `
+    SELECT
+      id,
+      username,
+      name,
+      email,
+      role,
+      created_at,
+      updated_at,
+      deleted_at
+    FROM users
+    WHERE id = $1
+  `;
+
+  const result = await client.query(sql, [userId]);
+
+  return result.rows[0] ?? null;
+}
+
+export async function lockUserIncludingDeleted({ userId, client = db }) {
+  const sql = `
+    SELECT
+      id,
+      username,
+      name,
+      email,
+      role,
+      created_at,
+      updated_at,
+      deleted_at
+    FROM users
+    WHERE id = $1
+    FOR UPDATE
+  `;
+
+  const result = await client.query(sql, [userId]);
+
+  return result.rows[0] ?? null;
+}
+
+export async function updateNonAdminUserRole({ userId, newRole, client = db }) {
+  if (newRole === 'admin') {
+    throw new Error('updateNonAdminUserRole cannot set role to admin.');
+  }
+
+  const sql = `
+    UPDATE users
+    SET role = $1
+    WHERE id = $2
+      AND deleted_at IS NULL
+      AND role <> 'admin'
+    RETURNING
+      id,
+      username,
+      name,
+      email,
+      role,
+      created_at,
+      updated_at,
+      deleted_at
+  `;
+
+  const result = await client.query(sql, [newRole, userId]);
 
   return result.rows[0] ?? null;
 }

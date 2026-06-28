@@ -22,6 +22,7 @@ import {
   expectResourceDeletedResponse,
   expectResourceInactiveResponse,
   expectNotAFutureAvailabilityWindowResponse,
+  expectNoDetailsErrorResponse,
 } from '../../../helpers/assertions.mjs';
 import {
   deactivateTestResource,
@@ -453,13 +454,11 @@ describe('/api/availability-windows', () => {
               endTime: '2036-01-01T08:30:00.000Z',
             });
 
-          expect(response.status).toBe(400);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'WINDOW_END_TIME_NOT_AFTER_START_TIME',
-              message: 'End time must be after start time.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 400,
+            code: 'WINDOW_END_TIME_NOT_AFTER_START_TIME',
+            message: 'End time must be after start time.',
           });
         });
       });

@@ -131,3 +131,16 @@ BEFORE DELETE
 ON availability_window_allowed_durations
 FOR EACH ROW
 EXECUTE FUNCTION prevent_deleting_last_allowed_duration();
+
+-- Can only delete admins through db not an http request.
+CREATE OR REPLACE TRIGGER trg_before_users_prevent_deleting_last_admin
+BEFORE UPDATE OF deleted_at
+ON users
+FOR EACH ROW
+EXECUTE FUNCTION prevent_deleting_last_admin();
+
+CREATE OR REPLACE TRIGGER trg_before_users_prevent_updating_last_admin_role
+BEFORE UPDATE OF role
+ON users
+FOR EACH ROW
+EXECUTE FUNCTION prevent_updating_last_admin_role();

@@ -3,15 +3,9 @@ import {
   commonListFilters,
   resourceIdSchema,
   resourceOwnerIdSchema,
+  searchSchema,
 } from './commonSchemas.js';
 import { createAvailabilityWindowsBodySchema } from './availabilityWindowSchemas.js';
-
-const resourceSearchSchema = Joi.string().trim().min(1).max(100).messages({
-  'string.base': 'Search must be a string.',
-  'string.empty': 'Search cannot be empty.',
-  'string.min': 'Search cannot be empty.',
-  'string.max': 'Search must be at most 100 characters long.',
-});
 
 export const listActiveResourcesQuerySchema = Joi.object({
   ...commonListFilters,
@@ -23,10 +17,10 @@ export const listActiveResourcesQuerySchema = Joi.object({
       'string.base': 'Sort by must be a string.',
       'any.only': 'Sort by must be either createdAt or name.',
     }),
-  search: resourceSearchSchema,
+  search: searchSchema,
 }).messages({ 'object.base': 'Query parameters must be an object.' });
 
-export const listResourcesForManagementQuerySchema = Joi.object({
+export const resourceOwnerListQuerySchemaShape = {
   ...commonListFilters,
   sortBy: Joi.string()
     .trim()
@@ -36,8 +30,7 @@ export const listResourcesForManagementQuerySchema = Joi.object({
       'string.base': 'Sort by must be a string.',
       'any.only': 'Sort by must be one of createdAt, updatedAt, or name.',
     }),
-  search: resourceSearchSchema,
-  ownerId: resourceOwnerIdSchema,
+  search: searchSchema.optional(),
   status: Joi.string()
     .trim()
     .lowercase()
@@ -47,6 +40,15 @@ export const listResourcesForManagementQuerySchema = Joi.object({
       'string.base': 'Status must be a string.',
       'any.only': 'Status must be one of active, inactive, deleted, or all.',
     }),
+};
+
+export const listResourcesForOwnerQuerySchema = Joi.object({
+  ...resourceOwnerListQuerySchemaShape,
+}).messages({ 'object.base': 'Query parameters must be an object.' });
+
+export const listResourcesForStaffQuerySchema = Joi.object({
+  ...resourceOwnerListQuerySchemaShape,
+  ownerId: resourceOwnerIdSchema,
 }).messages({ 'object.base': 'Query parameters must be an object.' });
 
 export const resourceByIdParamsSchema = Joi.object({

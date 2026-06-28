@@ -15,7 +15,7 @@ function translatePgError(error) {
     }
 
     if (error.constraint === 'unique_username_for_non_deleted_user_idx') {
-      return AppError.conflict('Username is already in use', {
+      return AppError.conflict('Username is already in use.', {
         code: ERROR_CODES.USERNAME_ALREADY_EXISTS,
         cause: error,
       });

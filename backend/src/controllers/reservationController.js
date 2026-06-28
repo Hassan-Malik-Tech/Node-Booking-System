@@ -1,6 +1,24 @@
 import * as reservationService from '../services/reservationService.js';
 import { success } from '../utils/response.js';
 
+export async function listReservationsForStaff(req, res) {
+  const queryParams = req.validated.query;
+
+  const { data, pagination } =
+    await reservationService.listReservationsForStaff({ queryParams });
+
+  return res.status(200).json(success({ data, pagination }));
+}
+
+export async function getReservationByIdForStaff(req, res) {
+  const reservationId = req.validated.params.reservationId;
+
+  const { data } =
+    await reservationService.getReservationByIdForStaff({ reservationId });
+
+  return res.status(200).json(success({ data }));
+}
+
 export async function bookReservation(req, res) {
   const authUserId = req.user.id;
   const reservationData = req.validated.body;

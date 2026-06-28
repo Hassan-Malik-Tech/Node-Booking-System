@@ -560,7 +560,7 @@ describe('/api/resources', () => {
             response,
             errorMessage: 'Invalid resource management list query.',
             field: 'ownerId',
-            detailsMessage: 'Owner id must be at least 1.',
+            detailsMessage: 'Resource owner id must be at least 1.',
           });
         });
 

@@ -1,6 +1,98 @@
 import Joi from 'joi';
 import { availabilityWindowIdSchema } from './availabilityWindowSchemas.js';
-import { resourceIdSchema } from './commonSchemas.js';
+import {
+  resourceIdSchema,
+  commonListFilters,
+  resourceOwnerIdSchema,
+  searchSchema,
+} from './commonSchemas.js';
+
+export const reservationListBaseQuerySchemaShape = {
+  ...commonListFilters,
+
+  sortDirection: Joi.string()
+    .trim()
+    .valid('asc', 'desc')
+    .default('asc')
+    .messages({
+      'string.base': 'Sort direction must be a string.',
+      'any.only': 'Sort direction must be either asc or desc.',
+    }),
+
+  sortBy: Joi.string()
+    .trim()
+    .valid('startTime', 'endTime', 'createdAt', 'updatedAt')
+    .default('startTime')
+    .messages({
+      'string.base': 'Sort by must be a string.',
+      'any.only':
+        'Sort by must be one of startTime, endTime, createdAt, or updatedAt.',
+    }),
+
+  status: Joi.string()
+    .trim()
+    .lowercase()
+    .valid('active', 'completed', 'cancelled', 'all')
+    .default('active')
+    .messages({
+      'string.base': 'Status must be a string.',
+      'any.only': 'Status must be one of active, completed, cancelled, or all.',
+    }),
+
+  timing: Joi.when('status', {
+    is: 'active',
+    then: Joi.string()
+      .trim()
+      .valid('upcoming', 'ongoing', 'ongoingAndUpcoming', 'past', 'all')
+      .default('ongoingAndUpcoming')
+      .messages({
+        'string.base': 'Timing must be a string.',
+        'any.only':
+          'Timing must be one of upcoming, ongoing, ongoingAndUpcoming, past, or all.',
+      }),
+
+    otherwise: Joi.string().trim().valid('all').default('all').messages({
+      'string.base': 'Timing must be a string.',
+      'any.only': 'Timing must be all when reservation status is not active.',
+    }),
+  }),
+};
+
+const reservationUserIdSchema = Joi.number().integer().min(1).messages({
+  'number.base': 'Reservation user id must be a number.',
+  'number.integer': 'Reservation user id must be an integer.',
+  'number.min': 'Reservation user id must be at least 1.',
+});
+
+export const listOwnReservationsQuerySchema = Joi.object({
+  ...reservationListBaseQuerySchemaShape,
+}).messages({ 'object.base': 'Query parameters must be an object.' });
+
+export const listReservationsForOwnedResourcesQuerySchema = Joi.object({
+  ...reservationListBaseQuerySchemaShape,
+
+  resourceId: resourceIdSchema.optional(),
+
+  reservationUserId: reservationUserIdSchema.optional(),
+
+  availabilityWindowId: availabilityWindowIdSchema.optional(),
+
+  search: searchSchema.optional(),
+}).messages({ 'object.base': 'Query parameters must be an object.' });
+
+export const listReservationsForStaffQuerySchema = Joi.object({
+  ...reservationListBaseQuerySchemaShape,
+
+  resourceId: resourceIdSchema.optional(),
+
+  resourceOwnerId: resourceOwnerIdSchema.optional(),
+
+  reservationUserId: reservationUserIdSchema.optional(),
+
+  availabilityWindowId: availabilityWindowIdSchema.optional(),
+
+  search: searchSchema.optional(),
+}).messages({ 'object.base': 'Query parameters must be an object.' });
 
 function validateUtcQuarterHourBoundary(time, helpers) {
   const minutes = time.getUTCMinutes();

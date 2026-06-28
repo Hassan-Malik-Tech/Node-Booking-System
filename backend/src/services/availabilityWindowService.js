@@ -6,6 +6,7 @@ import {
   getLimitAndOffset,
   buildPagination,
 } from './helpers/paginationHelpers.js';
+import { msToMinutes } from '../utils/time.js';
 import * as db from '../db/db.js';
 import * as resourceRules from './rules/resourceRules.js';
 import * as availabilityWindowRules from './rules/availabilityWindowRules.js';
@@ -45,7 +46,7 @@ function publicAvailabilityWindowMapper({ window, allowedDurations }) {
 }
 
 // For staff only list end point.
-export async function listAvailabilityWindows(queryParams) {
+export async function listAvailabilityWindows({ queryParams = {} } = {}) {
   try {
     const {
       page,
@@ -83,7 +84,7 @@ export async function listAvailabilityWindows(queryParams) {
   }
 }
 
-export async function getAvailabilityWindowById(windowId) {
+export async function getAvailabilityWindowById({ windowId }) {
   try {
     const availabilityWindow =
       await availabilityWindowRules.getAvailabilityWindowOrThrow({
@@ -102,7 +103,7 @@ export async function getAvailabilityWindowById(windowId) {
 // For public list end point.
 export async function listActiveAvailabilityWindowsByResourceId({
   resourceId,
-  queryParams,
+  queryParams = {},
 }) {
   try {
     await resourceRules.requirePublicResource({ resourceId });
@@ -652,9 +653,9 @@ export async function deleteAllowedDuration({
         .map((duration) => duration.minutes);
 
       for (const reservation of reservations) {
-        const reservationDurationMinutes =
-          (reservation.end_time.getTime() - reservation.start_time.getTime()) /
-          60_000;
+        const reservationDurationMinutes = msToMinutes(
+          reservation.end_time.getTime() - reservation.start_time.getTime(),
+        );
 
         if (!remainingAllowedDurations.includes(reservationDurationMinutes)) {
           const cancelledReservation =

@@ -5,7 +5,7 @@ const ALLOWED_RESOURCES_STATUS = new Set([
   'all',
 ]);
 
-export function buildResourcesForManagementWhereClause({
+export function buildResourcesForStaffWhereClause({
   status = 'active',
   search,
   ownerId,

@@ -17,6 +17,7 @@ import {
   expectResourceNotFoundResponse,
   expectValidationErrorResponse,
   expectAvailabilityWindowConflictResponse,
+  expectNoDetailsErrorResponse,
 } from '../../../helpers/assertions.mjs';
 import { softDeleteTestUser } from '../../../helpers/updateTestData.mjs';
 import { buildCreateAvailabilityWindowsBulkRequestBody } from '../../../helpers/postRequestBodies.mjs';
@@ -260,13 +261,11 @@ describe('/api/resources', () => {
             .set('Authorization', `Bearer ${accessToken}`)
             .send(buildCreateAvailabilityWindowsBulkRequestBody());
 
-          expect(response.status).toBe(409);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'RESOURCE_ALREADY_ACTIVE',
-              message: 'Resource is already active.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 409,
+            code: 'RESOURCE_ALREADY_ACTIVE',
+            message: 'Resource is already active.',
           });
         });
       });

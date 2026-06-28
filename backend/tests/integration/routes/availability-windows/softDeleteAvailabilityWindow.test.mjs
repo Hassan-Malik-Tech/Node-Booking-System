@@ -19,6 +19,7 @@ import {
   expectValidationErrorResponse,
   expectAvailabilityWindowNotFoundResponse,
   expectResourceDeletedResponse,
+  expectNoDetailsErrorResponse,
 } from '../../../helpers/assertions.mjs';
 import {
   softDeleteTestResource,
@@ -317,13 +318,11 @@ describe('/api/availability-windows', () => {
             .delete(`/api/availability-windows/${availabilityWindow.id}`)
             .set('Authorization', `Bearer ${accessToken}`);
 
-          expect(response.status).toBe(409);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'AVAILABILITY_WINDOW_EXPIRED',
-              message: 'Cannot delete an expired availability window.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 409,
+            code: 'AVAILABILITY_WINDOW_EXPIRED',
+            message: 'Cannot delete an expired availability window.',
           });
         });
       });

@@ -30,7 +30,6 @@ describe('/api/me', () => {
     describe('happy path', () => {
       test('new password works after password update', async () => {
         const { user, accessToken } = await createAuthenticatedTestUser();
-        const { username } = user;
 
         const updateResponse = await request(app)
           .patch('/api/me/password')
@@ -42,14 +41,13 @@ describe('/api/me', () => {
 
         const loginResponse = await request(app)
           .post('/api/auth/login')
-          .send({ username, password: NEW_PASSWORD });
+          .send({ email: user.email, password: NEW_PASSWORD });
 
         expect(loginResponse.status).toBe(200);
       });
 
       test('old password no longer works after password update', async () => {
         const { user, accessToken } = await createAuthenticatedTestUser();
-        const { username } = user;
 
         const updateResponse = await request(app)
           .patch('/api/me/password')
@@ -61,7 +59,7 @@ describe('/api/me', () => {
 
         const loginResponse = await request(app)
           .post('/api/auth/login')
-          .send({ username, password: TEST_PASSWORD });
+          .send({ email: user.email, password: TEST_PASSWORD });
 
         expectInvalidCredentialsResponse(loginResponse);
       });

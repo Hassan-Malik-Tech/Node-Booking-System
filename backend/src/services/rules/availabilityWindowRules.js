@@ -4,6 +4,7 @@ import AppError from '../../errors/AppError.js';
 import * as db from '../../db/db.js';
 import { availabilityWindowNotFound } from '../../errors/commonErrors.js';
 import ERROR_CODES from '../../errors/errorCodes.js';
+import { msToMinutes } from '../../utils/time.js';
 
 export function validateAllowedDurationsFitWindow({
   startTime,
@@ -14,11 +15,11 @@ export function validateAllowedDurationsFitWindow({
   // getTime gets the time in ms from a Date object since jan 01 1970 midnight.
   const windowLengthMs = endTime.getTime() - startTime.getTime();
   // There are 60_000 ms in a min (60 seconds in a min * 1000 ms in a second )
-  const windowLengthMins = windowLengthMs / 60_000;
+  const windowLengthMinutes = msToMinutes(windowLengthMs);
 
   // Returns a boolean, if one of the items returns true, it stops the loop.
   const allowedDurationLongerThanWindow = allowedDurations.some(
-    (allowedDuration) => allowedDuration > windowLengthMins,
+    (allowedDuration) => allowedDuration > windowLengthMinutes,
   );
 
   if (allowedDurationLongerThanWindow) {

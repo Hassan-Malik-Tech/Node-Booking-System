@@ -5,7 +5,7 @@ export async function listActiveResources(req, res) {
   const queryParams = req.validated.query;
 
   const { data, pagination } =
-    await resourceService.listActiveResources(queryParams);
+    await resourceService.listActiveResources({ queryParams });
 
   return res.status(200).json(success({ data, pagination }));
 }
@@ -13,25 +13,25 @@ export async function listActiveResources(req, res) {
 export async function getActiveResourceById(req, res) {
   const resourceId = req.validated.params.resourceId;
 
-  const { data } = await resourceService.getActiveResourceById(resourceId);
+  const { data } = await resourceService.getActiveResourceById({ resourceId });
 
   return res.status(200).json(success({ data }));
 }
 
-export async function listResourcesForManagement(req, res) {
+export async function listResourcesForStaff(req, res) {
   const queryParams = req.validated.query;
 
   const { data, pagination } =
-    await resourceService.listResourcesForManagement(queryParams);
+    await resourceService.listResourcesForStaff({ queryParams });
 
   return res.status(200).json(success({ data, pagination }));
 }
 
-export async function getResourceByIdForManagement(req, res) {
+export async function getResourceByIdForStaff(req, res) {
   const resourceId = req.validated.params.resourceId;
 
   const { data } =
-    await resourceService.getResourceByIdForManagement(resourceId);
+    await resourceService.getResourceByIdForStaff({ resourceId });
 
   return res.status(200).json(success({ data }));
 }

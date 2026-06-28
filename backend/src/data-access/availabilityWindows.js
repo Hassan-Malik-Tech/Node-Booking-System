@@ -1,46 +1,18 @@
-import * as sqlAvailabilityWindowQueries from './sql/availabilityWindowQueries.js';
-
-export const listAvailabilityWindows =
-  sqlAvailabilityWindowQueries.listAvailabilityWindows;
-
-export const listActiveWindowsByResourceId =
-  sqlAvailabilityWindowQueries.listActiveWindowsByResourceId;
-
-export const countActiveAvailabilityWindowsByResourceId =
-  sqlAvailabilityWindowQueries.countActiveAvailabilityWindowsByResourceId;
-
-export const getActiveAvailabilityWindowByResourceIdAndWindowId =
-  sqlAvailabilityWindowQueries.getActiveAvailabilityWindowByResourceIdAndWindowId;
-
-export const countAvailabilityWindows =
-  sqlAvailabilityWindowQueries.countAvailabilityWindows;
-
-export const getAvailabilityWindowById =
-  sqlAvailabilityWindowQueries.getAvailabilityWindowById;
-
-export const createAvailabilityWindow =
-  sqlAvailabilityWindowQueries.createAvailabilityWindow;
-
-export const updateFutureAvailabilityWindow =
-  sqlAvailabilityWindowQueries.updateFutureAvailabilityWindow;
-
-export const softDeleteAvailabilityWindowById =
-  sqlAvailabilityWindowQueries.softDeleteAvailabilityWindowById;
-
-export const createAllowedDuration =
-  sqlAvailabilityWindowQueries.createAllowedDuration;
-
-export const createAllowedDurations =
-  sqlAvailabilityWindowQueries.createAllowedDurations;
-
-export const deleteAllowedDurationByDurationIdAndWindowId =
-  sqlAvailabilityWindowQueries.deleteAllowedDurationByDurationIdAndWindowId;
-
-export const getAllowedDurationByDurationIdAndWindowId =
-  sqlAvailabilityWindowQueries.getAllowedDurationByDurationIdAndWindowId;
-
-export const softDeleteAvailabilityWindowsByResourceId =
-  sqlAvailabilityWindowQueries.softDeleteAvailabilityWindowsByResourceId;
-
-export const getAllowedDurationByWindowIdAndMinutes =
-  sqlAvailabilityWindowQueries.getAllowedDurationByWindowIdAndMinutes;
+export {
+  listAvailabilityWindows,
+  listActiveWindowsByResourceId,
+  countActiveAvailabilityWindowsByResourceId,
+  getActiveAvailabilityWindowByResourceIdAndWindowId,
+  countAvailabilityWindows,
+  getAvailabilityWindowById,
+  createAvailabilityWindow,
+  updateFutureAvailabilityWindow,
+  softDeleteAvailabilityWindowById,
+  createAllowedDuration,
+  createAllowedDurations,
+  deleteAllowedDurationByDurationIdAndWindowId,
+  getAllowedDurationByDurationIdAndWindowId,
+  softDeleteAvailabilityWindowsByResourceId,
+  getAllowedDurationByWindowIdAndMinutes,
+  softDeleteAvailabilityWindowsByResourceOwnerId,
+} from './sql/availabilityWindowQueries.js';

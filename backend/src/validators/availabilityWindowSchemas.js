@@ -74,7 +74,6 @@ export const listActiveAvailabilityWindowsByResourceIdQuerySchema = Joi.object({
 export const availabilityWindowIdSchema = Joi.number()
   .integer()
   .min(1)
-  .required()
   .messages({
     'number.base': 'Availability window id must be a number.',
     'number.integer': 'Availability window id must be an integer.',

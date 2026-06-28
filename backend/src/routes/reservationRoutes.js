@@ -7,10 +7,25 @@ import {
   bookReservationBodySchema,
   reservationIdParamsSchema,
   updateReservationPartySizeBodySchema,
+  listReservationsForStaffQuerySchema,
 } from '../validators/reservationSchemas.js';
 import requireRole from '../middleware/requireRole.js';
 
 const reservationsRouter = Router();
+
+reservationsRouter.get(
+  '/',
+  requireAuth,
+  loadCurrentStateOfAuthUser,
+  requireRole(['employee', 'admin']),
+  validateRequest({
+    query: {
+      schema: listReservationsForStaffQuerySchema,
+      errorMessage: 'Invalid reservation list query.',
+    },
+  }),
+  reservationController.listReservationsForStaff,
+);
 
 reservationsRouter.post(
   '/',
@@ -23,6 +38,20 @@ reservationsRouter.post(
     },
   }),
   reservationController.bookReservation,
+);
+
+reservationsRouter.get(
+  '/:reservationId',
+  requireAuth,
+  loadCurrentStateOfAuthUser,
+  requireRole(['employee', 'admin']),
+  validateRequest({
+    params: {
+      schema: reservationIdParamsSchema,
+      errorMessage: 'Invalid reservation id parameter.',
+    },
+  }),
+  reservationController.getReservationByIdForStaff,
 );
 
 reservationsRouter.patch(

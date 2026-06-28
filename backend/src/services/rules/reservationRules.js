@@ -3,6 +3,7 @@ import * as db from '../../db/db.js';
 import AppError from '../../errors/AppError.js';
 import ERROR_CODES from '../../errors/errorCodes.js';
 import { forbidden } from '../../errors/commonErrors.js';
+import { minutesToMs } from '../../utils/time.js';
 
 export async function getReservationOrThrow({
   reservationId,
@@ -80,7 +81,12 @@ export function requireActiveReservationHasNotEnded({
   }
 }
 
-export function requireReservationNotOngoing({ reservation, now, message }) {
+export function requireReservationNotOngoing({
+  reservation,
+  now,
+  message,
+  code,
+}) {
   if (
     reservation.start_time.getTime() <= now &&
     reservation.end_time.getTime() > now
@@ -89,7 +95,7 @@ export function requireReservationNotOngoing({ reservation, now, message }) {
       message ??
         'Cannot perform this action on a reservation that has already started.',
       {
-        code: ERROR_CODES.RESERVATION_ALREADY_STARTED,
+        code: code ?? ERROR_CODES.RESERVATION_ALREADY_STARTED,
       },
     );
   }
@@ -119,4 +125,15 @@ export function requirePartySizeWithinResourceCapacity({
       },
     );
   }
+}
+
+export function isPastCancellationNoticePeriod({
+  reservation,
+  cancellationNoticeMinutes,
+  now,
+}) {
+  return (
+    now >
+    reservation.start_time.getTime() - minutesToMs(cancellationNoticeMinutes)
+  );
 }

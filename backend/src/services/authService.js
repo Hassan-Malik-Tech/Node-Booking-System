@@ -45,7 +45,7 @@ export async function registerUser(userData) {
 
     // Don't put passwordHash into userData as that would mutate the original object
     // It is better to created a new object using the data from userData.
-    const registeredUser = await userQueries.createUserForRegistration({
+    const registeredUser = await userQueries.createUser({
       username,
       passwordHash,
       name,
@@ -62,11 +62,11 @@ export async function registerUser(userData) {
 
 export async function loginUser(userData) {
   try {
-    const { username, password } = userData;
-    const INVALID_CREDENTIALS_MESSAGE = 'Invalid username or password.';
+    const { email, password } = userData;
+    const INVALID_CREDENTIALS_MESSAGE = 'Invalid email or password.';
 
-    // Checks if the username belongs to an active user, deleted users cannot login.
-    const foundUser = await userQueries.getActiveUserByUsername(username);
+    // Checks if the email belongs to an active user, deleted users cannot login.
+    const foundUser = await userQueries.getActiveUserByEmail({ email });
 
     if (!foundUser) {
       throw AppError.unauthorized(INVALID_CREDENTIALS_MESSAGE);

@@ -338,6 +338,37 @@ export async function softDeleteAvailabilityWindowsByResourceId({
   return deletedWindowIds.length;
 }
 
+export async function softDeleteAvailabilityWindowsByResourceOwnerId({
+  ownerId,
+  client = db,
+}) {
+  // Postgres supports joins in UPDATE through FROM.
+  const windowsSql = `
+    UPDATE availability_windows aw
+    SET deleted_at = NOW()
+    FROM resources r
+    WHERE aw.resource_id = r.id
+      AND r.owner_id = $1
+      AND aw.deleted_at IS NULL
+    RETURNING aw.id
+  `;
+
+  const windowsResult = await client.query(windowsSql, [ownerId]);
+
+  const deletedWindowIds = windowsResult.rows.map((row) => row.id);
+
+  if (deletedWindowIds.length > 0) {
+    const durationsSql = `
+      DELETE FROM availability_window_allowed_durations
+      WHERE availability_window_id = ANY($1::int[])
+    `;
+
+    await client.query(durationsSql, [deletedWindowIds]);
+  }
+
+  return deletedWindowIds.length;
+}
+
 export async function getAvailabilityWindowById({
   windowId,
   includeDeleted = false,

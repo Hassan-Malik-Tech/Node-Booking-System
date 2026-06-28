@@ -18,6 +18,7 @@ import {
   expectValidationErrorResponse,
   expectReservationCompletedResponse,
   expectReservationNotFoundResponse,
+  expectNoDetailsErrorResponse,
 } from '../../../helpers/assertions.mjs';
 import { softDeleteTestUser } from '../../../helpers/updateTestData.mjs';
 import * as db from '../../../../src/db/db.js';
@@ -273,13 +274,11 @@ describe('/api/reservations', () => {
             .patch(`/api/reservations/${reservation.id}/complete`)
             .set('Authorization', `Bearer ${accessToken}`);
 
-          expect(response.status).toBe(409);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'RESERVATION_ALREADY_COMPLETED',
-              message: 'Reservation already completed.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 409,
+            code: 'RESERVATION_ALREADY_COMPLETED',
+            message: 'Reservation already completed.',
           });
         });
       });
@@ -313,13 +312,11 @@ describe('/api/reservations', () => {
             .patch(`/api/reservations/${reservation.id}/complete`)
             .set('Authorization', `Bearer ${accessToken}`);
 
-          expect(response.status).toBe(409);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'RESERVATION_ALREADY_CANCELLED',
-              message: 'Cannot complete a cancelled reservation.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 409,
+            code: 'RESERVATION_ALREADY_CANCELLED',
+            message: 'Cannot complete a cancelled reservation.',
           });
         });
       });
@@ -338,14 +335,11 @@ describe('/api/reservations', () => {
             .patch(`/api/reservations/${reservation.id}/complete`)
             .set('Authorization', `Bearer ${accessToken}`);
 
-          expect(response.status).toBe(409);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'RESERVATION_NOT_STARTED',
-              message:
-                'You cannot complete a reservation that has not started yet.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 409,
+            code: 'RESERVATION_NOT_STARTED',
+            message: 'You cannot complete a reservation that has not started yet.',
           });
         });
       });

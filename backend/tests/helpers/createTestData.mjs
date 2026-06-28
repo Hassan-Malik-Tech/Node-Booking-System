@@ -1,6 +1,6 @@
 import { TEST_PASSWORD } from './testConstants.mjs';
 import { hashPassword } from '../../src/auth/password.js';
-import { createUserForRegistration } from '../../src/data-access/users.js';
+import { createUser } from '../../src/data-access/users.js';
 import { createResource } from '../../src/data-access/resources.js';
 import {
   createAvailabilityWindow,
@@ -16,6 +16,7 @@ import {
 import * as db from '../../src/db/db.js';
 import { softDeleteTestResource } from './updateTestData.mjs';
 import { createReservation } from '../../src/data-access/reservations.js';
+import { minutesToMs } from '../../src/utils/time.js';
 
 const testPasswordHash = await hashPassword(TEST_PASSWORD);
 
@@ -28,7 +29,7 @@ export async function createTestUser({ role = 'user', ...overrides } = {}) {
     ...overrides,
   };
 
-  const user = await createUserForRegistration(testUserData);
+  const user = await createUser(testUserData);
 
   if (role === 'user') {
     return user;
@@ -40,7 +41,9 @@ export async function createTestUser({ role = 'user', ...overrides } = {}) {
       UPDATE users
       SET role = $1
       WHERE id = $2
-      RETURNING role
+      RETURNING 
+        role,
+        updated_at
     `,
     [role, user.id],
   );
@@ -48,6 +51,7 @@ export async function createTestUser({ role = 'user', ...overrides } = {}) {
   return {
     ...user,
     role: result.rows[0].role,
+    updated_at: result.rows[0].updated_at,
   };
 }
 
@@ -84,15 +88,20 @@ export async function createTestResource({
   const resource = await createResource({ resourceData: testResourceData });
 
   let deletedResource;
+  let updated_at = resource.updated_at;
+  let is_active = resource.is_active;
 
   if (deleted) {
     deletedResource = await softDeleteTestResource(resource.id);
+    updated_at = deletedResource.updated_at;
+    is_active = deletedResource.is_active;
   }
 
   return {
     ...resource,
-    is_active: inactive ? false : resource.is_active,
+    is_active,
     deleted_at: deleted ? deletedResource.deleted_at : resource.deleted_at,
+    updated_at,
     owner: resourceOwner,
   };
 }
@@ -129,7 +138,7 @@ export async function createTestAvailabilityWindow({
   let endTime;
 
   if (ongoing) {
-    endTime = '2036-01-01T17:00:00Z';
+    endTime = '2035-12-01T17:00:00Z';
   } else if (expired) {
     endTime = '2025-01-01T17:00:00Z';
   }
@@ -177,6 +186,8 @@ export async function createTestReservation({
   expired = false,
   cancelled = false,
   completed = false,
+  windowStartTime,
+  windowEndTime,
   ...overrides
 } = {}) {
   if ((ongoing || expired) && availabilityWindow !== undefined) {
@@ -191,18 +202,39 @@ export async function createTestReservation({
     );
   }
 
+  if (
+    (windowStartTime === undefined && windowEndTime !== undefined) ||
+    (windowStartTime !== undefined && windowEndTime === undefined)
+  ) {
+    throw new Error(
+      'windowStartTime and windowEndTime must be passed together.',
+    );
+  }
+
   const testUser = user ?? (await createTestUser());
+
+  const createTestAvailabilityWindowParams =
+    windowStartTime !== undefined
+      ? {
+          resource,
+          ongoing,
+          expired,
+          startTime: windowStartTime,
+          endTime: windowEndTime,
+        }
+      : { resource, ongoing, expired };
 
   const testWindow =
     availabilityWindow ??
-    (await createTestAvailabilityWindow({ resource, ongoing, expired }));
+    (await createTestAvailabilityWindow(createTestAvailabilityWindowParams));
 
   const testResource = resource ?? testWindow.resource;
 
   const windowStartTimeMs = testWindow.start_time.getTime();
 
-  const reservationDurationMs =
-    testWindow.allowed_durations[0].minutes * 60_000;
+  const reservationDurationMs = minutesToMs(
+    testWindow.allowed_durations[0].minutes,
+  );
 
   const reservationStartTime = testWindow.start_time.toISOString();
 
@@ -234,7 +266,8 @@ export async function createTestReservation({
         WHERE id = $1
         RETURNING 
           status,
-          cancelled_at
+          cancelled_at,
+          updated_at
       `,
       [reservation.id],
     );
@@ -250,26 +283,36 @@ export async function createTestReservation({
         WHERE id = $1
         RETURNING 
           status,
-          system_completed_at
+          system_completed_at,
+          updated_at
       `,
       [reservation.id],
     );
   }
 
   let status = reservation.status;
+  let updated_at = reservation.updated_at;
+  let cancelled_at = reservation.cancelled_at;
+  let system_completed_at = reservation.system_completed_at;
 
-  if (cancelled) status = cancelledReservation.rows[0].status;
-  if (completed) status = completedReservation.rows[0].status;
+  if (cancelled) {
+    status = cancelledReservation.rows[0].status;
+    updated_at = cancelledReservation.rows[0].updated_at;
+    cancelled_at = cancelledReservation.rows[0].cancelled_at;
+  }
+
+  if (completed) {
+    status = completedReservation.rows[0].status;
+    updated_at = completedReservation.rows[0].updated_at;
+    system_completed_at = completedReservation.rows[0].system_completed_at;
+  }
 
   return {
     ...reservation,
+    updated_at,
     status,
-    cancelled_at: cancelled
-      ? cancelledReservation.rows[0].cancelled_at
-      : reservation.cancelled_at,
-    system_completed_at: completed
-      ? completedReservation.rows[0].system_completed_at
-      : reservation.system_completed_at,
+    cancelled_at,
+    system_completed_at,
     user: testUser,
     resource: testResource,
     availabilityWindow: testWindow,

@@ -67,3 +67,15 @@ export function reservationStateChanged({ message } = {}) {
     },
   );
 }
+
+export function userStateChanged({ message } = {}) {
+  return AppError.conflict(message ?? 'User state changed during request.', {
+    code: ERROR_CODES.USER_STATE_CHANGED,
+  });
+}
+
+export function userNotFound({ message } = {}) {
+  return AppError.notFound(message ?? 'User not found.', {
+    code: ERROR_CODES.USER_NOT_FOUND,
+  });
+}

@@ -17,6 +17,11 @@ import {
   availabilityWindowStateChanged,
 } from '../errors/commonErrors.js';
 import { lockUserOrThrow } from './helpers/userHelpers.js';
+import {
+  getLimitAndOffset,
+  buildPagination,
+} from './helpers/paginationHelpers.js';
+import { minutesToMs, msToMinutes } from '../utils/time.js';
 
 function mapBookedReservation(reservation) {
   return {
@@ -52,6 +57,68 @@ function mapReservationForStaff(reservation) {
   };
 }
 
+export async function listReservationsForStaff({ queryParams = {} } = {}) {
+  try {
+    const {
+      page,
+      pageSize,
+      sortBy = 'startTime',
+      sortDirection = 'asc',
+      resourceId,
+      resourceOwnerId,
+      reservationUserId,
+      availabilityWindowId,
+      search,
+      status = 'active',
+      timing,
+    } = queryParams;
+
+    const { limit, offset } = getLimitAndOffset({ pageSize, page });
+
+    const filters = {
+      limit,
+      offset,
+      sortBy,
+      sortDirection,
+      resourceId,
+      resourceOwnerId,
+      reservationUserId,
+      availabilityWindowId,
+      search,
+      status,
+      timing,
+    };
+
+    const [reservations, total] = await Promise.all([
+      reservationQueries.listReservationsForStaff(filters),
+      reservationQueries.countReservationsForStaff(filters),
+    ]);
+
+    return {
+      data: reservations.map((reservation) =>
+        mapReservationForStaff(reservation),
+      ),
+      pagination: buildPagination({ page, pageSize, total }),
+    };
+  } catch (error) {
+    throw caughtError(error);
+  }
+}
+
+export async function getReservationByIdForStaff({ reservationId }) {
+  try {
+    const reservation = await reservationRules.getReservationOrThrow({
+      reservationId,
+    });
+
+    return {
+      data: mapReservationForStaff(reservation),
+    };
+  } catch (error) {
+    throw caughtError(error);
+  }
+}
+
 export async function bookReservation({ authUserId, reservationData }) {
   let client;
 
@@ -85,8 +152,9 @@ export async function bookReservation({ authUserId, reservationData }) {
       );
     }
 
-    const reservationDurationMinutes =
-      (endTime.getTime() - startTime.getTime()) / 60_000;
+    const reservationDurationMinutes = msToMinutes(
+      endTime.getTime() - startTime.getTime(),
+    );
 
     // To verify that the reservation duration is equal to one of
     // the allowed durations for the window being booked.
@@ -267,11 +335,15 @@ export async function cancelReservation({ reservationId, authUserId }) {
       nonStaffUserIsCancellingOwnReservationAndDoesNotOwnResource ||
       staffUserIsCancellingOwnReservationAndDoesNotOwnResource
     ) {
-      if (
-        now >
-        reservation.start_time.getTime() -
-          availabilityWindow.cancellation_notice_minutes * 60_000
-      ) {
+      const isPastCancellationNoticePeriod =
+        reservationRules.isPastCancellationNoticePeriod({
+          reservation,
+          cancellationNoticeMinutes:
+            availabilityWindow.cancellation_notice_minutes,
+          now,
+        });
+
+      if (isPastCancellationNoticePeriod) {
         throw AppError.conflict(
           'You can no longer cancel this reservation because the cancellation notice period has passed.',
           {
@@ -413,10 +485,10 @@ export async function updateReservationPartySize({
   authUserId,
   partySize,
 }) {
+  const now = Date.now();
   let client;
 
   try {
-    const now = Date.now();
     client = await db.getClient();
 
     await client.query('BEGIN');
@@ -487,7 +559,7 @@ export async function updateReservationPartySize({
     // resource can still have an ongoing reservation if the resource was deleted
     // or deactivated while the reservation was ongoing.
     //
-    // These two checks are defensive because deleting/deactivating the resource
+    // These two checks are defensive. Deleting/deactivating the resource
     // or deleting the window should already cancel all future reservations.
     if (resource.deleted_at !== null || resource.is_active === false) {
       throw resourceStateChanged({

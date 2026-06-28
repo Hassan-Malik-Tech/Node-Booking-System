@@ -375,9 +375,6 @@ WHERE status = 'active'; -- because I filter out expired reservations
 
 -- remember updated_at for all the tables needs to be handles consistently by the backend logic, dont forget this
 
--- remember the raw sql schema and prisma schema must stay aligned, they must not drift into different directions.
-  -- migrations that help keep them in sync
-
 -- Once a user or resource is soft deleted, it cannot be restored. However, a new user may still be created with the same email after the previous user is soft deleted, and a resource owner may still create a new resource with the same name after all of their resources with that name have been soft deleted. These rules are enforced in the backend.
 
 ----
@@ -497,4 +494,3 @@ WHERE status = 'active'; -- because I filter out expired reservations
 -- However, if an employee/admin is cancelling their own reservation, they are treated
 -- as the reservation owner, not as staff, so the normal cancellation deadline still applies.
 -- add this to the ReservationPolicy class
-

@@ -40,7 +40,7 @@ describe('/api/auth', () => {
 
         const loginResponse = await request(app)
           .post('/api/auth/login')
-          .send({ username: testUsername, password: TEST_PASSWORD });
+          .send({ email: testEmail, password: TEST_PASSWORD });
 
         expect(loginResponse.status).toBe(200);
         expect(loginResponse.body).toEqual({
@@ -63,11 +63,11 @@ describe('/api/auth', () => {
       });
 
       test('does not return password or password hash', async () => {
-        const { username } = await createTestUser();
+        const { email } = await createTestUser();
 
         const response = await request(app)
           .post('/api/auth/login')
-          .send({ username, password: TEST_PASSWORD });
+          .send({ email, password: TEST_PASSWORD });
 
         expect(response.status).toBe(200);
         expectNoPasswordFields(response.body.data.user);
@@ -76,7 +76,7 @@ describe('/api/auth', () => {
 
     describe('unhappy path', () => {
       describe('returns 400 VALIDATION_ERROR with correct response', () => {
-        test('for missing username', async () => {
+        test('for missing email', async () => {
           const response = await request(app)
             .post('/api/auth/login')
             .send({ password: TEST_PASSWORD });
@@ -89,8 +89,8 @@ describe('/api/auth', () => {
               message: 'Invalid login request body.',
               details: [
                 {
-                  field: 'username',
-                  message: 'Username is required.',
+                  field: 'email',
+                  message: 'Email is required.',
                 },
               ],
             },
@@ -98,11 +98,11 @@ describe('/api/auth', () => {
         });
 
         test('for missing password', async () => {
-          const { username } = buildRegisterRequestBody();
+          const { email } = buildRegisterRequestBody();
 
           const response = await request(app)
             .post('/api/auth/login')
-            .send({ username });
+            .send({ email });
 
           expect(response.status).toBe(400);
           expect(response.body).toEqual({
@@ -135,8 +135,8 @@ describe('/api/auth', () => {
                   message: 'Password is required.',
                 },
                 {
-                  field: 'username',
-                  message: 'Username is required.',
+                  field: 'email',
+                  message: 'Email is required.',
                 },
               ]),
             },
@@ -146,12 +146,12 @@ describe('/api/auth', () => {
         });
 
         test('for password that exceeds bcrypt max bytes', async () => {
-          const { username } = buildRegisterRequestBody();
+          const { email } = buildRegisterRequestBody();
 
           const response = await request(app)
             .post('/api/auth/login')
             .send({
-              username,
+              email,
               password: 'a'.repeat(73),
             });
 
@@ -173,22 +173,22 @@ describe('/api/auth', () => {
       });
 
       describe('returns 401 INVALID_CREDENTIALS with correct unified response', () => {
-        test('when username does not exist', async () => {
-          const { username } = buildRegisterRequestBody();
+        test('when email does not exist', async () => {
+          const { email } = buildRegisterRequestBody();
 
           const response = await request(app)
             .post('/api/auth/login')
-            .send({ username, password: TEST_PASSWORD });
+            .send({ email, password: TEST_PASSWORD });
 
           expectInvalidCredentialsResponse(response);
         });
 
         test('when password is incorrect', async () => {
-          const { username } = await createTestUser();
+          const { email } = await createTestUser();
 
           const response = await request(app)
             .post('/api/auth/login')
-            .send({ username, password: '123456789abcdefgh' });
+            .send({ email, password: '123456789abcdefgh' });
 
           expectInvalidCredentialsResponse(response);
         });

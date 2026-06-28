@@ -6,14 +6,22 @@ export async function softDeleteTestUser(userId) {
       UPDATE users
       SET deleted_at = NOW()
       WHERE id = $1
-      RETURNING deleted_at
+      RETURNING
+        id,
+        username,
+        name,
+        email,
+        role,
+        created_at,
+        updated_at,
+        deleted_at
     `,
     [userId],
   );
 
   return result.rows[0];
 }
- 
+
 export async function updateTestUserRole({ userId, role }) {
   const result = await db.query(
     `
@@ -35,7 +43,10 @@ export async function softDeleteTestResource(resourceId) {
       SET deleted_at = NOW(),
         is_active = false
       WHERE id = $1
-      RETURNING deleted_at
+      RETURNING 
+        deleted_at,
+        updated_at,
+        is_active
     `,
     [resourceId],
   );

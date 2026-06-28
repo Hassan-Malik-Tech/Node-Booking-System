@@ -16,6 +16,7 @@ import {
   expectResourceNotFoundResponse,
   expectValidationErrorResponse,
   expectAvailabilityWindowNotFoundResponse,
+  expectNoDetailsErrorResponse,
 } from '../../../helpers/assertions.mjs';
 import {
   softDeleteTestUser,
@@ -440,13 +441,11 @@ describe('/api/reservations', () => {
               }),
             );
 
-          expect(response.status).toBe(400);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'RESERVATION_OUTSIDE_AVAILABILITY_WINDOW',
-              message: 'Reservation must fit within the availability window.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 400,
+            code: 'RESERVATION_OUTSIDE_AVAILABILITY_WINDOW',
+            message: 'Reservation must fit within the availability window.',
           });
         });
 
@@ -470,13 +469,11 @@ describe('/api/reservations', () => {
               }),
             );
 
-          expect(response.status).toBe(400);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'RESERVATION_OUTSIDE_AVAILABILITY_WINDOW',
-              message: 'Reservation must fit within the availability window.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 400,
+            code: 'RESERVATION_OUTSIDE_AVAILABILITY_WINDOW',
+            message: 'Reservation must fit within the availability window.',
           });
         });
       });
@@ -503,14 +500,11 @@ describe('/api/reservations', () => {
               }),
             );
 
-          expect(response.status).toBe(400);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'RESERVATION_DURATION_NOT_ALLOWED',
-              message:
-                'Reservation duration is not allowed for this availability window.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 400,
+            code: 'RESERVATION_DURATION_NOT_ALLOWED',
+            message: 'Reservation duration is not allowed for this availability window.',
           });
         });
       });
@@ -534,14 +528,11 @@ describe('/api/reservations', () => {
               }),
             );
 
-          expect(response.status).toBe(400);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'RESERVATION_PARTY_SIZE_EXCEEDS_CAPACITY',
-              message:
-                'Reservation party size cannot exceed resource capacity of 4.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 400,
+            code: 'RESERVATION_PARTY_SIZE_EXCEEDS_CAPACITY',
+            message: 'Reservation party size cannot exceed resource capacity of 4.',
           });
         });
       });
@@ -575,14 +566,11 @@ describe('/api/reservations', () => {
             .set('Authorization', `Bearer ${secondAccessToken}`)
             .send(reservationReqBody);
 
-          expect(secondResponse.status).toBe(409);
-          expect(secondResponse.body).toEqual({
-            success: false,
-            error: {
-              code: 'RESERVATION_OVERLAP',
-              message:
-                'Reservation overlaps with an existing reservation for this resource',
-            },
+          expectNoDetailsErrorResponse({
+            response: secondResponse,
+            status: 409,
+            code: 'RESERVATION_OVERLAP',
+            message: 'Reservation overlaps with an existing reservation for this resource',
           });
         });
 
@@ -623,13 +611,12 @@ describe('/api/reservations', () => {
             (response) => response.status === 409,
           );
 
-          expect(conflictResponse.body).toEqual({
-            success: false,
-            error: {
-              code: 'RESERVATION_OVERLAP',
-              message:
-                'Reservation overlaps with an existing reservation for this resource',
-            },
+          expectNoDetailsErrorResponse({
+            response: conflictResponse,
+            status: 409,
+            code: 'RESERVATION_OVERLAP',
+            message:
+              'Reservation overlaps with an existing reservation for this resource',
           });
 
           const successResponse = responses.find(

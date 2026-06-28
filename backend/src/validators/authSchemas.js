@@ -1,26 +1,26 @@
 import Joi from 'joi';
+import { passwordSchema, makeNewPasswordSchema } from './commonSchemas.js';
 import {
   usernameSchema,
   nameSchema,
   emailSchema,
-  passwordSchema,
-  makeNewPasswordSchema,
-} from './commonSchemas.js';
+  userCreationBaseSchemaShape,
+} from './userSchemas.js';
 
 const registrationSchema = Joi.object({
-  username: usernameSchema.required(),
-  email: emailSchema.required(),
-  name: nameSchema.optional(),
-  password: makeNewPasswordSchema(),
+  ...userCreationBaseSchemaShape,
 }).messages({
   'object.base': 'Request body must be an object.',
 });
 
 const loginSchema = Joi.object({
-  username: usernameSchema.required(),
+  email: emailSchema.required(),
   password: passwordSchema.required(),
-}).messages({
-  'object.base': 'Request body must be an object.',
-});
+})
+  .required()
+  .messages({
+    'object.base': 'Request body must be an object.',
+    'any.required': 'Request body is required.',
+  });
 
 export { registrationSchema, loginSchema };

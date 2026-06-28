@@ -172,7 +172,7 @@ BEGIN
     SELECT COUNT(*)
     FROM availability_window_allowed_durations
     WHERE availability_window_id = OLD.availability_window_id
-  ) <= 1
+  ) = 1
   AND (
     SELECT deleted_at
     FROM availability_windows
@@ -184,3 +184,50 @@ BEGIN
   RETURN OLD;
 END;
 $$;
+
+-- Can only delete admins through db not an http request.
+CREATE OR REPLACE FUNCTION prevent_deleting_last_admin()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF OLD.role = 'admin'
+    AND OLD.deleted_at IS NULL
+    AND NEW.deleted_at IS NOT NULL
+    AND (
+      SELECT COUNT(*)
+      FROM users
+      WHERE role = 'admin'
+        AND deleted_at IS NULL
+    ) = 1
+  THEN
+    RAISE EXCEPTION 'Cannot delete the last admin.';
+  END IF;
+
+-- RETURN NEW is  like the else, if there is no raised exception, it returns new.
+  RETURN NEW;
+END;
+$$;
+
+-- Can only update admin role through db not an http request.
+CREATE OR REPLACE FUNCTION prevent_updating_last_admin_role()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF OLD.role = 'admin'
+    AND OLD.deleted_at IS NULL
+    AND (
+      SELECT COUNT(*)
+      FROM users
+      WHERE role = 'admin'
+        AND deleted_at IS NULL
+    ) = 1
+  THEN
+    RAISE EXCEPTION 'Cannot update the role of the last admin.';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+

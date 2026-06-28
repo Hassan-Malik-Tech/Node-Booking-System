@@ -21,6 +21,7 @@ import {
   expectResourceDeletedResponse,
   expectResourceInactiveResponse,
   expectNotAFutureAvailabilityWindowResponse,
+  expectNoDetailsErrorResponse,
 } from '../../../helpers/assertions.mjs';
 import {
   deactivateTestResource,
@@ -397,13 +398,11 @@ describe('/api/availability-windows', () => {
             )
             .set('Authorization', `Bearer ${accessToken}`);
 
-          expect(response.status).toBe(404);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'ALLOWED_DURATION_NOT_FOUND',
-              message: 'Allowed duration not found.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 404,
+            code: 'ALLOWED_DURATION_NOT_FOUND',
+            message: 'Allowed duration not found.',
           });
         });
 
@@ -435,13 +434,11 @@ describe('/api/availability-windows', () => {
             )
             .set('Authorization', `Bearer ${accessToken}`);
 
-          expect(response.status).toBe(404);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'ALLOWED_DURATION_NOT_FOUND',
-              message: 'Allowed duration not found.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 404,
+            code: 'ALLOWED_DURATION_NOT_FOUND',
+            message: 'Allowed duration not found.',
           });
         });
       });
@@ -576,14 +573,11 @@ describe('/api/availability-windows', () => {
             )
             .set('Authorization', `Bearer ${accessToken}`);
 
-          expect(response.status).toBe(409);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'CANNOT_DELETE_LAST_ALLOWED_DURATION',
-              message:
-                'Cannot delete the last allowed duration for an active availability window.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 409,
+            code: 'CANNOT_DELETE_LAST_ALLOWED_DURATION',
+            message: 'Cannot delete the last allowed duration for an active availability window.',
           });
         });
       });

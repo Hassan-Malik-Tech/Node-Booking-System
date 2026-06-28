@@ -4,6 +4,7 @@ import {
   generateRandomEmail,
   generateRandomResourceName,
 } from './generateRandomData.mjs';
+import { minutesToMs } from '../../src/utils/time.js';
 
 export function buildRegisterRequestBody(overrides = {}) {
   return {
@@ -85,7 +86,7 @@ export function buildBookReservationRequestBody({
   // Instead of hard coding the duration, i make it equal to the first
   // allowed duration of the window in ms.
   const reservationDurationMs =
-    availabilityWindow.allowed_durations[0].minutes * 60_000;
+    minutesToMs(availabilityWindow.allowed_durations[0].minutes);
 
   const reservationStartTime = availabilityWindow.start_time.toISOString();
 

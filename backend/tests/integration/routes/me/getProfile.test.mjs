@@ -10,6 +10,7 @@ import {
   expectNoPasswordFields,
   expectAuthRequiredResponse,
   expectInvalidTokenResponse,
+  expectNoDetailsErrorResponse,
 } from '../../../helpers/assertions.mjs';
 import { softDeleteTestUser } from '../../../helpers/updateTestData.mjs';
 
@@ -80,13 +81,11 @@ describe('/api/me', () => {
             .get('/api/me')
             .set('Authorization', 'not-a-bearer-token');
 
-          expect(response.status).toBe(401);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'INVALID_AUTHORIZATION_HEADER',
-              message: 'Invalid authorization header',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 401,
+            code: 'INVALID_AUTHORIZATION_HEADER',
+            message: 'Invalid authorization header',
           });
         });
       });

@@ -19,6 +19,7 @@ import {
   expectValidationErrorResponse,
   expectCancelledReservationResponse,
   expectReservationNotFoundResponse,
+  expectNoDetailsErrorResponse,
 } from '../../../helpers/assertions.mjs';
 import { softDeleteTestUser } from '../../../helpers/updateTestData.mjs';
 import * as db from '../../../../src/db/db.js';
@@ -289,13 +290,11 @@ describe('/api/reservations', () => {
             .patch(`/api/reservations/${reservation.id}/cancel`)
             .set('Authorization', `Bearer ${accessToken}`);
 
-          expect(response.status).toBe(409);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'RESERVATION_ALREADY_CANCELLED',
-              message: 'Reservation is already cancelled.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 409,
+            code: 'RESERVATION_ALREADY_CANCELLED',
+            message: 'Reservation is already cancelled.',
           });
         });
       });
@@ -327,13 +326,11 @@ describe('/api/reservations', () => {
             .patch(`/api/reservations/${reservation.id}/cancel`)
             .set('Authorization', `Bearer ${accessToken}`);
 
-          expect(response.status).toBe(409);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'RESERVATION_ALREADY_COMPLETED',
-              message: 'Cannot cancel a completed reservation.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 409,
+            code: 'RESERVATION_ALREADY_COMPLETED',
+            message: 'Cannot cancel a completed reservation.',
           });
         });
       });
@@ -360,13 +357,11 @@ describe('/api/reservations', () => {
             .patch(`/api/reservations/${reservation.id}/cancel`)
             .set('Authorization', `Bearer ${accessToken}`);
 
-          expect(response.status).toBe(409);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'RESERVATION_ALREADY_ENDED',
-              message: 'Cannot cancel a past reservation.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 409,
+            code: 'RESERVATION_ALREADY_ENDED',
+            message: 'Cannot cancel a past reservation.',
           });
         });
       });
@@ -397,13 +392,11 @@ describe('/api/reservations', () => {
             .patch(`/api/reservations/${reservation.id}/cancel`)
             .set('Authorization', `Bearer ${accessToken}`);
 
-          expect(response.status).toBe(409);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'RESERVATION_ALREADY_STARTED',
-              message: 'Cannot cancel a reservation that has already started.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 409,
+            code: 'RESERVATION_ALREADY_STARTED',
+            message: 'Cannot cancel a reservation that has already started.',
           });
         });
       });
@@ -425,14 +418,11 @@ describe('/api/reservations', () => {
             .patch(`/api/reservations/${reservation.id}/cancel`)
             .set('Authorization', `Bearer ${accessToken}`);
 
-          expect(response.status).toBe(409);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'RESERVATION_CANCELLATION_NOTICE_PASSED',
-              message:
-                'You can no longer cancel this reservation because the cancellation notice period has passed.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 409,
+            code: 'RESERVATION_CANCELLATION_NOTICE_PASSED',
+            message: 'You can no longer cancel this reservation because the cancellation notice period has passed.',
           });
         });
 
@@ -455,14 +445,11 @@ describe('/api/reservations', () => {
             .patch(`/api/reservations/${reservation.id}/cancel`)
             .set('Authorization', `Bearer ${accessToken}`);
 
-          expect(response.status).toBe(409);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'RESERVATION_CANCELLATION_NOTICE_PASSED',
-              message:
-                'You can no longer cancel this reservation because the cancellation notice period has passed.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 409,
+            code: 'RESERVATION_CANCELLATION_NOTICE_PASSED',
+            message: 'You can no longer cancel this reservation because the cancellation notice period has passed.',
           });
         });
       });

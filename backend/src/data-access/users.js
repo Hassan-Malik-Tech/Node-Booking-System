@@ -1,11 +1,18 @@
-import * as sqlUserQueries from './sql/userQueries.js';
-
-export const createUserForRegistration =
-  sqlUserQueries.createUserForRegistration;
-export const activeUsernameExists = sqlUserQueries.activeUsernameExists;
-export const activeEmailExists = sqlUserQueries.activeEmailExists;
-export const getActiveUserByUsername = sqlUserQueries.getActiveUserByUsername;
-export const getActiveUserById = sqlUserQueries.getActiveUserById;
-export const updateActiveUserById = sqlUserQueries.updateActiveUserById;
-export const updatePassword = sqlUserQueries.updatePassword;
-export const lockUser = sqlUserQueries.lockUser;
+export {
+  createUser,
+  activeUsernameExists,
+  activeEmailExists,
+  getActiveUserByUsername,
+  getActiveUserById,
+  updateActiveUserById,
+  updatePassword,
+  lockUser,
+  softDeleteUserById,
+  getUserById,
+  lockUserIncludingDeleted,
+  updateNonAdminUserRole,
+  getActiveUserByEmail,
+  createUserAsAdmin,
+  listUsersForStaff,
+  countUsersForStaff,
+} from './sql/userQueries.js';

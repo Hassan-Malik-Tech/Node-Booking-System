@@ -40,7 +40,7 @@ function mapResourceWithIsActive(resource) {
   };
 }
 
-function mapResourceForManagement(resource) {
+export function mapResourceForStaff(resource) {
   return {
     id: resource.id,
     ownerId: resource.owner_id,
@@ -54,7 +54,7 @@ function mapResourceForManagement(resource) {
   };
 }
 
-export async function listActiveResources(queryParams) {
+export async function listActiveResources({ queryParams = {} } = {}) {
   try {
     const { page, pageSize, search, sortBy, sortDirection } = queryParams;
 
@@ -82,7 +82,7 @@ export async function listActiveResources(queryParams) {
   }
 }
 
-export async function getActiveResourceById(resourceId) {
+export async function getActiveResourceById({ resourceId }) {
   try {
     const resource = await resourceRules.requirePublicResource({ resourceId });
 
@@ -94,14 +94,14 @@ export async function getActiveResourceById(resourceId) {
   }
 }
 
-export async function listResourcesForManagement(queryParams) {
+export async function listResourcesForStaff({ queryParams = {} } = {}) {
   try {
     const {
       page,
       pageSize,
       search,
-      sortBy,
-      sortDirection,
+      sortBy = 'createdAt',
+      sortDirection = 'desc',
       ownerId,
       status = 'active',
     } = queryParams;
@@ -119,12 +119,12 @@ export async function listResourcesForManagement(queryParams) {
     };
 
     const [resources, total] = await Promise.all([
-      resourceQueries.listResourcesForManagement(filters),
-      resourceQueries.countResourcesForManagement(filters),
+      resourceQueries.listResourcesForStaff(filters),
+      resourceQueries.countResourcesForStaff(filters),
     ]);
 
     return {
-      data: resources.map((resource) => mapResourceForManagement(resource)),
+      data: resources.map((resource) => mapResourceForStaff(resource)),
       pagination: buildPagination({ page, pageSize, total }),
     };
   } catch (error) {
@@ -132,12 +132,12 @@ export async function listResourcesForManagement(queryParams) {
   }
 }
 
-export async function getResourceByIdForManagement(resourceId) {
+export async function getResourceByIdForStaff({ resourceId }) {
   try {
     const resource = await resourceRules.getResourceOrThrow({ resourceId });
 
     return {
-      data: mapResourceForManagement(resource),
+      data: mapResourceForStaff(resource),
     };
   } catch (error) {
     throw caughtError(error);

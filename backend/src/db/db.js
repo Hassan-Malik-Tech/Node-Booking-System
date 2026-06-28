@@ -13,3 +13,4 @@ export async function getClient() {
 export async function closePool() {
   await pool.end();
 }
+

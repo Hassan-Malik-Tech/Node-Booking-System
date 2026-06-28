@@ -20,6 +20,7 @@ import {
   expectResourceDeletedResponse,
   expectResourceInactiveResponse,
   expectNotAFutureAvailabilityWindowResponse,
+  expectNoDetailsErrorResponse,
 } from '../../../helpers/assertions.mjs';
 import {
   deactivateTestResource,
@@ -355,14 +356,11 @@ describe('/api/availability-windows', () => {
             .set('Authorization', `Bearer ${accessToken}`)
             .send([30]);
 
-          expect(response.status).toBe(409);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'ALLOWED_DURATION_ALREADY_EXISTS',
-              message:
-                'Allowed duration already exists for this availability window.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 409,
+            code: 'ALLOWED_DURATION_ALREADY_EXISTS',
+            message: 'Allowed duration already exists for this availability window.',
           });
         });
       });
@@ -405,14 +403,11 @@ describe('/api/availability-windows', () => {
             .set('Authorization', `Bearer ${accessToken}`)
             .send([165]);
 
-          expect(response.status).toBe(400);
-          expect(response.body).toEqual({
-            success: false,
-            error: {
-              code: 'TOO_MANY_ALLOWED_DURATIONS',
-              message:
-                'An availability window can have at most 10 allowed durations.',
-            },
+          expectNoDetailsErrorResponse({
+            response,
+            status: 400,
+            code: 'TOO_MANY_ALLOWED_DURATIONS',
+            message: 'An availability window can have at most 10 allowed durations.',
           });
         });
       });

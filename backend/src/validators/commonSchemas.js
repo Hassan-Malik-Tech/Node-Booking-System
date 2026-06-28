@@ -29,7 +29,6 @@ export const commonListFilters = {
 export const resourceIdSchema = Joi.number()
   .integer()
   .min(1)
-  .required()
   .messages({
     'number.base': 'Resource id must be a number.',
     'number.integer': 'Resource id must be an integer.',
@@ -38,44 +37,17 @@ export const resourceIdSchema = Joi.number()
   });
 
 export const resourceOwnerIdSchema = Joi.number().integer().min(1).messages({
-  'number.base': 'Owner id must be a number.',
-  'number.integer': 'Owner id must be an integer.',
-  'number.min': 'Owner id must be at least 1.',
+  'number.base': 'Resource owner id must be a number.',
+  'number.integer': 'Resource owner id must be an integer.',
+  'number.min': 'Resource owner id must be at least 1.',
 });
 
-// Preserve username casing for display, but compare usernames case-insensitively.
-export const usernameSchema = Joi.string()
-  .trim()
-  .min(3)
-  .max(30)
-  .pattern(/^[a-zA-Z0-9_]+$/)
-  .messages({
-    'string.base': 'Username must be a string.',
-    'string.empty': 'Username is required.',
-    'string.min': 'Username must be at least 3 characters.',
-    'string.max': 'Username must be at most 30 characters long.',
-    'string.pattern.base':
-      'Username can only contain letters numbers and underscores.', // .base is for regex failure specifically
-    'any.required': 'Username is required.',
-  });
-
-export const emailSchema = Joi.string().trim().lowercase().email().messages({
-  'string.base': 'Email must be a string.',
-  'string.empty': 'Email is required.',
-  'string.email': 'Email must be valid.',
-  'any.required': 'Email is required.',
+export const searchSchema = Joi.string().trim().min(1).max(100).messages({
+  'string.base': 'Search must be a string.',
+  'string.empty': 'Search cannot be empty.',
+  'string.min': 'Search cannot be empty.',
+  'string.max': 'Search must be at most 100 characters long.',
 });
-
-export const nameSchema = Joi.string()
-  .trim()
-  .min(1)
-  .allow(null)
-  .optional()
-  .messages({
-    'string.base': 'Name must be a string.',
-    'string.empty': 'Name cannot be empty.',
-    'string.min': 'Name cannot be empty.', // because lower than 1 is 0
-  });
 
 function validatePasswordByteLength(password, helpers) {
   if (Buffer.byteLength(password, 'utf8') > BCRYPT_MAX_BYTES) {
